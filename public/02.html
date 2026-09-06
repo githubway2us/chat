@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Secure Chat & Code Platform</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background-color: #0f172a; color: #f8fafc; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* PDPA Modal Styles */
+        .pdpa-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.98); display: flex; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
+        .pdpa-box { background: #1e293b; padding: 30px; border-radius: 12px; width: 100%; max-width: 600px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); border: 1px solid #334155; }
+        .pdpa-box h2 { color: #38bdf8; margin-bottom: 15px; font-size: 1.3rem; display: flex; align-items: center; gap: 8px; }
+        .pdpa-content { background: #0f172a; padding: 15px; border-radius: 8px; max-height: 250px; overflow-y: auto; font-size: 0.85rem; color: #94a3b8; line-height: 1.6; margin-bottom: 20px; border: 1px solid #334155; }
+        .pdpa-content p { margin-bottom: 10px; }
+        .pdpa-checkbox-group { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; font-size: 0.9rem; color: #f8fafc; cursor: pointer; }
+        .pdpa-checkbox-group input { width: 18px; height: 18px; accent-color: #38bdf8; cursor: pointer; }
+        .pdpa-btn { width: 100%; padding: 12px; background: #38bdf8; border: none; color: #0f172a; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 1rem; transition: background 0.2s; }
+        .pdpa-btn:disabled { background: #475569; color: #94a3b8; cursor: not-allowed; }
+        .pdpa-btn:not(:disabled):hover { background: #7dd3fc; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); display: flex; justify-content: center; align-items: center; z-index: 2000; padding: 20px; overflow-y: auto; }
+        .auth-box { background: #1e293b; padding: 25px; border-radius: 12px; width: 100%; max-width: 420px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .auth-box h2 { margin-bottom: 15px; color: #38bdf8; text-align: center; }
+        .auth-box input, .auth-box select, .auth-box textarea { width: 100%; padding: 10px; margin-bottom: 10px; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 6px; outline: none; }
+        .auth-box label { font-size: 0.85rem; color: #94a3b8; display: block; margin-bottom: 3px; }
+        .auth-box button { width: 100%; padding: 10px; background: #38bdf8; border: none; color: #0f172a; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 5px; }
+        .toggle-link { text-align: center; margin-top: 10px; font-size: 0.85rem; color: #38bdf8; cursor: pointer; }
+
+        .app-container { display: flex; height: 100vh; overflow: hidden; position: relative; }
+        
+        .sidebar { width: 280px; background: #1e293b; border-right: 1px solid #334155; display: flex; flex-direction: column; transition: transform 0.3s ease; z-index: 100; flex-shrink: 0; }
+        .sidebar-header { padding: 15px; font-size: 1rem; font-weight: bold; border-bottom: 1px solid #334155; color: #38bdf8; display: flex; justify-content: space-between; align-items: center; }
+        
+        .section-title { padding: 8px 10px 3px; font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
+        .list-container { list-style: none; padding: 0 6px; overflow-y: auto; max-height: 120px; }
+        .list-item { padding: 7px 9px; margin-bottom: 3px; background: #0f172a; border-radius: 6px; font-size: 0.82rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+        .list-item:hover { background: #334155; }
+        
+        .chat-main { flex: 1; display: flex; flex-direction: column; background: #0f172a; min-width: 0; }
+        
+        .chat-header { padding: 10px 15px; background: #1e293b; border-bottom: 2px solid #f97316; font-size: 1rem; font-weight: bold; display: flex; justify-content: space-between; align-items: center; color: #f97316; }
+        .header-actions { display: flex; gap: 8px; align-items: center; }
+        
+        .mobile-toggle-btn { display: none; background: #f97316; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
+        .mobile-refresh-btn { display: none; background: #10b981; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
+        .report-btn { background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+        
+        /* Music Player Area */
+        .room-music-player { background: #162032; padding: 8px 15px; border-bottom: 1px solid #334155; display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; flex-wrap: wrap; gap: 10px; }
+        .music-controls { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .music-controls select { background: #0f172a; color: #38bdf8; border: 1px solid #334155; padding: 4px 8px; border-radius: 4px; outline: none; font-size: 0.8rem; max-width: 200px; }
+        .music-controls button { background: #38bdf8; border: none; padding: 4px 8px; border-radius: 4px; font-weight: bold; cursor: pointer; color: #0f172a; font-size: 0.75rem; }
+
+        .chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .message { background: #1e293b; padding: 12px; border-radius: 8px; max-width: 85%; border: 1px solid #334155; word-break: break-word; }
+        .message.dm { border-color: #f59e0b; }
+        .message.system { background: #311010; border-color: #ef4444; max-width: 100%; text-align: center; color: #fca5a5; font-weight: bold; }
+        .message-header { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.8rem; color: #94a3b8; }
+        .message-user { font-weight: bold; color: #38bdf8; }
+        
+        .chat-input-container { padding: 12px 15px; background: #1e293b; border-top: 1px solid #334155; display: flex; flex-direction: column; gap: 8px; }
+        .toolbar { display: flex; gap: 10px; align-items: center; font-size: 0.9rem; flex-wrap: wrap; }
+        .toolbar select { background: #0f172a; color: #38bdf8; border: 1px solid #334155; padding: 4px; border-radius: 4px; }
+        .file-upload-btn, .location-btn { background: #334155; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.85rem; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 4px; }
+        .location-btn { background: #f59e0b; color: #0f172a; font-weight: bold; }
+
+        .input-group { display: flex; gap: 8px; }
+        textarea { flex: 1; height: 48px; padding: 10px; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 6px; resize: none; outline: none; }
+        .send-btn { padding: 0 16px; background: #38bdf8; border: none; color: #0f172a; font-weight: bold; border-radius: 6px; cursor: pointer; }
+
+        #admin-panel { display: none; padding: 20px; background: #0f172a; height: 100vh; overflow-y: auto; }
+        .admin-controls { display: flex; gap: 15px; margin-bottom: 20px; background: #1e293b; padding: 15px; border-radius: 8px; align-items: center; flex-wrap: wrap; }
+        .admin-table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #1e293b; margin-bottom: 25px; }
+        .admin-table th, .admin-table td { padding: 10px; border: 1px solid #334155; text-align: left; font-size: 0.9rem; }
+
+        .broadcast-popup { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #ef4444; color: white; padding: 15px 30px; border-radius: 8px; z-index: 3000; font-weight: bold; display: none; }
+
+        @media (max-width: 768px) {
+            .sidebar { position: absolute; height: 100%; left: -280px; z-index: 1000; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
+            .sidebar.active { left: 0; }
+            .mobile-toggle-btn { display: inline-block; }
+            .mobile-refresh-btn { display: inline-block; }
+            .chat-main { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PDPA Consent Modal -->
+    <div id="pdpa-modal" class="pdpa-overlay" style="display: none;">
+        <div class="pdpa-box">
+            <h2>🔒 นโยบายคุ้มครองข้อมูลส่วนบุคคล (PDPA)</h2>
+            <div class="pdpa-content">
+                <p>เว็บไซต์นี้ให้ความสำคัญอย่างยิ่งกับการคุ้มครองข้อมูลส่วนบุคคลของคุณ ตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 (PDPA)</p>
+                <p><b>1. ข้อมูลที่เราจัดเก็บ:</b> ข้อมูลการสมัครสมาชิก (ชื่อผู้ใช้, ชื่อเล่น, สังกัด, จังหวัด), ข้อมูลการใช้งานห้องแชท, ไฟล์ที่อัปโหลด และข้อมูลพิกัดตำแหน่ง (เมื่อคุณเลือกกดแชร์โลเคชั่น)</p>
+                <p><b>2. วัตถุประสงค์การเก็บข้อมูล:</b> เพื่อใช้ในการยืนยันตัวตน, ดำเนินงานระบบแชทและห้องสนทนา, ความปลอดภัยของแพลตฟอร์ม และป้องกันการกระทำผิดกฎหมาย</p>
+                <p><b>3. สิทธิของเจ้าของข้อมูล:</b> คุณมีสิทธิในการขอเข้าถึง, แก้ไข, หรือขอลบข้อมูลส่วนบุคคลของคุณได้ตลอดเวลาโดยติดต่อผู้ดูแลระบบ</p>
+                <p>การกด "ยอมรับและเข้าสู่เว็บไซต์" ถือว่าคุณยินยอมให้เราเก็บรวบรวมและใช้ข้อมูลของคุณตามวัตถุประสงค์ดังกล่าวข้างต้น</p>
+            </div>
+            <label class="pdpa-checkbox-group">
+                <input type="checkbox" id="pdpa-check" onchange="togglePdpaButton()">
+                <span>ข้าพเจ้าได้อ่านและยอมรับข้อกำหนดนโยบายความเป็นส่วนตัวและเงื่อนไขการใช้งาน (PDPA)</span>
+            </label>
+            <button id="pdpa-submit-btn" class="pdpa-btn" disabled onclick="acceptPdpa()">ยอมรับและเข้าสู่เว็บไซต์</button>
+        </div>
+    </div>
+
+    <div id="broadcast-alert" class="broadcast-popup">📢 ประกาศ: <span id="broadcast-text"></span></div>
+
+    <div id="auth-modal" class="modal-overlay">
+        <div class="auth-box">
+            <div id="login-form">
+                <h2>เข้าสู่ระบบ</h2>
+                <input type="text" id="login-user" placeholder="ชื่อผู้ใช้">
+                <input type="password" id="login-pass" placeholder="รหัสผ่าน">
+                <button onclick="login()">เข้าสู่ระบบ</button>
+                <div class="toggle-link" onclick="switchAuth('register')">สมัครสมาชิก</div>
+            </div>
+            <div id="register-form" style="display: none;">
+                <h2>สมัครสมาชิก</h2>
+                <input type="text" id="reg-user" placeholder="ชื่อผู้ใช้">
+                <input type="password" id="reg-pass" placeholder="รหัสผ่าน">
+                <input type="text" id="reg-nickname" placeholder="ชื่อเล่น">
+                <input type="date" id="reg-birthdate">
+                <input type="text" id="reg-office" placeholder="สำนักงาน/แผนก">
+                <input type="text" id="reg-province" placeholder="จังหวัด">
+                <input type="text" id="reg-facebook" placeholder="ลิงก์เฟซบุ๊กยืนยันตัวตน">
+                <button onclick="register()">ส่งคำขอสมัคร</button>
+                <div class="toggle-link" onclick="switchAuth('login')">เข้าสู่ระบบ</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2>🛠️ Dashboard แอดมินจัดการห้องและระบบ</h2>
+            <button onclick="logout()" style="padding: 6px 12px; background: #ef4444; border:none; color:white; border-radius:4px; cursor:pointer;">ออกจากระบบ</button>
+        </div>
+
+        <div class="admin-controls">
+            <div>
+                <label><b>Global Mute:</b></label>
+                <button id="mute-btn" onclick="toggleGlobalMute()" style="padding: 6px 12px; background: #f59e0b; border:none; color:white; border-radius:4px; cursor:pointer;">ปิดแชททั้งหมด</button>
+            </div>
+            <div style="flex: 1;">
+                <label><b>ประกาศหน้าจอ:</b></label>
+                <div style="display: flex; gap: 5px;">
+                    <input type="text" id="broadcast-input" placeholder="พิมพ์ประกาศ..." style="margin:0; padding:6px; background:#0f172a; border:1px solid #334155; color:white; border-radius:4px;">
+                    <button onclick="sendBroadcast()" style="background:#38bdf8; border:none; padding:6px 12px; border-radius:4px; font-weight:bold; cursor:pointer;">ส่ง</button>
+                </div>
+            </div>
+        </div>
+
+        <h3>💬 จัดการห้องสนทนาทั้งหมด</h3>
+        <div style="margin-bottom: 10px;">
+            <button onclick="bulkDeleteRooms()" style="background:#ef4444; color:white; border:none; padding:6px 12px; border-radius:4px; font-weight:bold; cursor:pointer;">🗑️ ลบห้องที่เลือกพร้อมกัน</button>
+        </div>
+        <table class="admin-table" id="admin-room-table">
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="select-all-rooms" onclick="toggleSelectAllRooms(this)"></th>
+                    <th>ชื่อห้อง</th>
+                    <th>สร้างโดย</th>
+                    <th>การจัดการ</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <h3>👥 จัดการสมาชิก</h3>
+        <table class="admin-table" id="admin-user-table">
+            <thead>
+                <tr>
+                    <th>ผู้ใช้ / ชื่อเล่น</th>
+                    <th>สถานะ</th>
+                    <th>สังกัด</th>
+                    <th>จัดการ</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div class="app-container" id="main-app" style="display: none;">
+        <div class="sidebar" id="sidebar-drawer">
+            <div class="sidebar-header">
+                <span>💬 รายการห้องและผู้ใช้</span>
+                <span onclick="logout()" style="cursor:pointer; font-size:0.8rem; color:#ef4444;">ออก</span>
+            </div>
+            
+            <div class="section-title">
+                <span>ห้องแชท (<span id="room-count">0</span>)</span>
+                <button onclick="createRoom()" style="background:#38bdf8; border:none; border-radius:3px; padding:1px 6px; cursor:pointer; font-weight:bold;">+</button>
+            </div>
+            <ul id="room-list" class="list-container" style="max-height: 140px;">
+                <li class="list-item" onclick="switchTarget('global', 'global', 'ห้องกลาง (Global Lobby)')">🌍 ห้องกลาง (Lobby)</li>
+                <!-- เพิ่มห้องบันทึกข้อความแบบถาวรที่นี่ -->
+                <li class="list-item" onclick="switchTarget('room', 'save-log-room', 'ห้องบันทึกข้อความ')" style="background: #172554; border: 1px solid #1e40af;">💾 ห้องบันทึกข้อความ</li>
+            </ul>
+
+            <div class="section-title" style="background: #162032; margin-top: 3px;">
+                <span>👥 สมาชิกในห้องนี้ (<span id="current-room-user-count">0</span>)</span>
+            </div>
+            <ul id="current-room-user-list" class="list-container" style="max-height: 120px; border-bottom: 1px solid #334155;"></ul>
+
+            <div class="section-title"><span>ออนไลน์ทั้งหมด (<span id="user-count">0</span>)</span></div>
+            <ul id="user-list" class="list-container" style="max-height: 120px;"></ul>
+        </div>
+
+        <div class="chat-main">
+            <div class="chat-header">
+                <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                    <button class="mobile-toggle-btn" onclick="toggleSidebar()">📂 เมนู</button>
+                    <button class="mobile-refresh-btn" onclick="refreshMobileApp()">🔄 รีเฟรช</button>
+                    <span id="current-chat-title" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">กำลังคุยกับ: 🟠 ห้องกลาง (Global Lobby)</span>
+                </div>
+                <div class="header-actions">
+                    <button class="report-btn" onclick="openReportModal()">🚨 แจ้งละเมิด</button>
+                </div>
+            </div>
+
+            <!-- ส่วนเครื่องเล่นเพลง (เลือกเพลงจากคลัง / อัปโหลด) -->
+            <div class="room-music-player">
+                <div style="display: flex; align-items: center; gap: 8px; overflow: hidden; min-width: 200px;">
+                    <span>🎵 เล่นอยู่:</span>
+                    <span id="now-playing-song" style="color: #38bdf8; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">ยังไม่ได้เล่นเพลง</span>
+                </div>
+                <div class="music-controls">
+                    <select id="room-music-select">
+                        <option value="">-- เลือกเพลงในคลัง --</option>
+                    </select>
+                    <button onclick="playSelectedMusic()">▶️ เล่นเพลงนี้</button>
+                    <button onclick="syncMusicAction('pause')">⏸️ หยุด</button>
+
+                    <label style="background:#334155; color:white; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.75rem;">
+                        📤 เพิ่มเพลง <input type="file" id="room-audio-file" accept="audio/*" style="display: none;" onchange="uploadMusicToLibrary(this)">
+                    </label>
+                </div>
+            </div>
+            <audio id="room-audio-element" style="display:none;"></audio>
+
+            <div id="chat-messages" class="chat-messages"></div>
+            
+            <div class="chat-input-container">
+                <div class="toolbar">
+                    <select id="send-mode">
+                        <option value="text">📝 Text ธรรมดา</option>
+                        <option value="code">💻 โค้ด</option>
+                    </select>
+                    <label class="file-upload-btn">
+                        📎 แนบไฟล์ <input type="file" id="file-input" style="display: none;" onchange="uploadAndSendFile(this)">
+                    </label>
+                    <button class="location-btn" onclick="shareLocation()">📍 แชร์โลเคชั่น</button>
+                </div>
+                <div class="input-group">
+                    <textarea id="message-input" placeholder="พิมพ์ข้อความ..."></textarea>
+                    <button class="send-btn" onclick="sendMessage()">ส่ง</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let socket;
+        let currentUser = null;
+        let currentTarget = { type: 'global', id: 'global', name: 'ห้องกลาง (Global Lobby)' };
+        let allRoomsCache = [];
+        let allUsersCache = [];
+        let isMutedGlobal = false;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const isPdpaAccepted = localStorage.getItem('pdpa_accepted');
+            if (!isPdpaAccepted) {
+                document.getElementById('pdpa-modal').style.display = 'flex';
+            }
+        });
+
+        function togglePdpaButton() {
+            const isChecked = document.getElementById('pdpa-check').checked;
+            document.getElementById('pdpa-submit-btn').disabled = !isChecked;
+        }
+
+        function acceptPdpa() {
+            localStorage.setItem('pdpa_accepted', 'true');
+            document.getElementById('pdpa-modal').style.display = 'none';
+        }
+
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden && currentUser && currentUser.role !== 'admin') {
+                sessionStorage.setItem('was_hidden', 'true');
+            }
+        });
+
+        window.addEventListener('load', () => {
+            const isMobile = window.innerWidth <= 768 || 'ontouchstart' in window;
+            if (isMobile && sessionStorage.getItem('was_hidden') === 'true') {
+                alert('กรณีหากพักจอหรือปิดหน้าต่าง จะต้องล็อกอินเข้าใหม่');
+                sessionStorage.removeItem('was_hidden');
+            }
+        });
+
+        function refreshMobileApp() {
+            if (confirm('ต้องการรีเฟรชหน้าเว็บใหม่ใช่หรือไม่?')) {
+                location.reload();
+            }
+        }
+
+        function toggleSidebar() { document.getElementById('sidebar-drawer').classList.toggle('active'); }
+        function switchAuth(mode) {
+            document.getElementById('login-form').style.display = mode === 'login' ? 'block' : 'none';
+            document.getElementById('register-form').style.display = mode === 'register' ? 'block' : 'none';
+        }
+
+        async function register() {
+            const payload = {
+                username: document.getElementById('reg-user').value,
+                password: document.getElementById('reg-pass').value,
+                nickname: document.getElementById('reg-nickname').value,
+                birthdate: document.getElementById('reg-birthdate').value,
+                office: document.getElementById('reg-office').value,
+                province: document.getElementById('reg-province').value,
+                facebookUrl: document.getElementById('reg-facebook').value
+            };
+            const res = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const data = await res.json();
+            alert(data.message);
+            if (data.success) switchAuth('login');
+        }
+
+        async function login() {
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: document.getElementById('login-user').value, password: document.getElementById('login-pass').value })
+            });
+            const data = await res.json();
+            if (!data.success) return alert(data.message);
+
+            currentUser = data.user;
+            document.getElementById('auth-modal').style.display = 'none';
+            sessionStorage.removeItem('was_hidden');
+
+            if (currentUser.role === 'admin') {
+                document.getElementById('admin-panel').style.display = 'block';
+                loadAdminDashboard();
+            } else {
+                document.getElementById('main-app').style.display = 'flex';
+                initSocket();
+                loadMusicLibrary();
+            }
+        }
+
+        function logout() { 
+            sessionStorage.clear();
+            location.reload(); 
+        }
+
+        async function loadAdminDashboard() {
+            const res = await fetch('/api/admin/data');
+            const data = await res.json();
+            isMutedGlobal = data.globalMute;
+
+            const roomTbody = document.querySelector('#admin-room-table tbody');
+            roomTbody.innerHTML = '';
+            if (data.rooms.length === 0) {
+                roomTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8;">ยังไม่มีห้องสร้างเพิ่มเติม</td></tr>`;
+            } else {
+                data.rooms.forEach(r => {
+                    roomTbody.innerHTML += `
+                        <tr>
+                            <td><input type="checkbox" class="room-checkbox" value="${r.id}"></td>
+                            <td><b>${r.name}</b></td>
+                            <td>${r.createdBy}</td>
+                            <td>
+                                <button onclick="renameRoom('${r.id}', '${r.name}')" style="background:#38bdf8; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">เปลี่ยนชื่อ</button>
+                                <button onclick="deleteSingleRoom('${r.id}')" style="background:#ef4444; border:none; color:white; padding:4px 8px; border-radius:4px; cursor:pointer;">ลบ</button>
+                            </td>
+                        </tr>`;
+                });
+            }
+
+            const userTbody = document.querySelector('#admin-user-table tbody');
+            userTbody.innerHTML = '';
+            data.users.forEach(u => {
+                if (u.role === 'admin') return;
+                const isApproved = u.status === 'approved';
+                userTbody.innerHTML += `
+                    <tr>
+                        <td><b>${u.username}</b> (${u.nickname || '-'})</td>
+                        <td><span style="color: ${isApproved ? '#34d399' : '#f59e0b'};">${u.status}</span></td>
+                        <td>${u.office || '-'}</td>
+                        <td>
+                            ${!isApproved ? `<button onclick="approveUser('${u.id}')" style="background:#34d399; color:#0f172a; font-weight:bold; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; margin-right:4px;">อนุมัติ</button>` : ''}
+                            <button onclick="kickUser('${u.id}')" style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">เตะ/แบน</button>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        async function approveUser(userId) {
+            await fetch('/api/admin/action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, action: 'approve' })
+            });
+            loadAdminDashboard();
+        }
+
+        function toggleSelectAllRooms(master) {
+            document.querySelectorAll('.room-checkbox').forEach(cb => cb.checked = master.checked);
+        }
+
+        async function deleteSingleRoom(roomId) {
+            if (roomId === 'save-log-room') return alert('ไม่สามารถลบห้องบันทึกข้อความระบบได้');
+            if (!confirm('ยืนยันลบห้องนี้?')) return;
+            await fetch('/api/admin/room-action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'delete', roomId })
+            });
+            loadAdminDashboard();
+        }
+
+        async function bulkDeleteRooms() {
+            const selected = Array.from(document.querySelectorAll('.room-checkbox:checked')).map(cb => cb.value);
+            if (selected.length === 0) return alert('กรุณาเลือกห้องที่ต้องการลบอย่างน้อย 1 ห้อง');
+            if (selected.includes('save-log-room')) return alert('ไม่สามารถลบห้องบันทึกข้อความระบบได้');
+            if (!confirm(`ยืนยันลบ ${selected.length} ห้องที่เลือก?`)) return;
+
+            await fetch('/api/admin/room-action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'bulk-delete', roomIds: selected })
+            });
+            loadAdminDashboard();
+        }
+
+        async function renameRoom(roomId, oldName) {
+            const newName = prompt('ระบุชื่อห้องใหม่:', oldName);
+            if (!newName || newName.trim() === '') return;
+
+            await fetch('/api/admin/room-action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'rename', roomId, newName: newName.trim() })
+            });
+            loadAdminDashboard();
+        }
+
+        async function kickUser(userId) {
+            const reason = prompt('ระบุเหตุผลการแบน:');
+            if (reason === null) return;
+            await fetch('/api/admin/action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, action: 'ban', reason })
+            });
+            loadAdminDashboard();
+        }
+
+        async function toggleGlobalMute() {
+            const res = await fetch('/api/admin/toggle-mute', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mute: !isMutedGlobal }) });
+            const data = await res.json();
+            isMutedGlobal = data.globalMute;
+            document.getElementById('mute-btn').innerText = isMutedGlobal ? 'เปิดแชททั้งหมด' : 'ปิดแชททั้งหมด';
+        }
+
+        async function sendBroadcast() {
+            const text = document.getElementById('broadcast-input').value.trim();
+            if (!text) return;
+            await fetch('/api/admin/broadcast', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text }) });
+            document.getElementById('broadcast-input').value = '';
+        }
+
+        async function openReportModal() {
+            const reason = prompt(`แจ้งรายงานการละเมิดในห้อง [ ${currentTarget.name} ]:`);
+            if (!reason) return;
+            await fetch('/api/report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reporter: currentUser.username, roomName: currentTarget.name, reason })
+            });
+            alert('ส่งรายงานเรียบร้อย');
+        }
+
+        function initSocket() {
+            socket = io();
+            socket.emit('join', currentUser);
+
+            socket.on('update-users', (users) => { allUsersCache = users; renderUserList(users); });
+            socket.on('room-list', (rooms) => { allRoomsCache = rooms; renderRoomList(rooms); });
+            socket.on('room-members-update', (data) => {
+                if (currentTarget.id === data.roomId) renderCurrentRoomMembers(data.members);
+            });
+            socket.on('message', (data) => appendMessage(data));
+
+            socket.on('system-notification', (text) => {
+                const chatMessages = document.getElementById('chat-messages');
+                const div = document.createElement('div');
+                div.className = 'message system';
+                div.innerHTML = `⚠️ ${text}`;
+                chatMessages.appendChild(div);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            });
+
+            socket.on('room-music-sync', (data) => {
+                const audioEl = document.getElementById('room-audio-element');
+                document.getElementById('now-playing-song').innerText = data.audioName || 'กำลังเล่นเพลง';
+                
+                if (data.action === 'play') {
+                    const currentSrc = audioEl.getAttribute('src');
+                    if (!currentSrc || !currentSrc.endsWith(data.audioUrl)) {
+                        audioEl.src = data.audioUrl;
+                        audioEl.load();
+                    }
+                    if (data.currentTime !== undefined) {
+                        audioEl.currentTime = data.currentTime;
+                    }
+                    audioEl.play().catch(e => console.log("Auto-play blocked:", e));
+                } else if (data.action === 'pause') {
+                    audioEl.pause();
+                }
+            });
+
+            socket.on('room-renamed', (data) => {
+                if (currentTarget.id === data.roomId) {
+                    currentTarget.name = data.newName;
+                    document.getElementById('current-chat-title').innerHTML = `กำลังคุยกับ: <span style="color: #f97316;">🟠 ${data.newName}</span>`;
+                }
+            });
+
+            socket.on('force-leave-room', (data) => {
+                if (currentTarget.id === data.roomId) {
+                    alert('ห้องที่คุณอยู่ถูกลบโดยแอดมิน');
+                    switchTarget('global', 'global', 'ห้องกลาง (Global Lobby)');
+                }
+            });
+
+            socket.on('force-kick', (data) => {
+                alert(`คุณถูกแบน: ${data.reason}`);
+                location.reload();
+            });
+
+            socket.on('admin-popup', (data) => {
+                const popup = document.getElementById('broadcast-alert');
+                document.getElementById('broadcast-text').innerText = data.message;
+                popup.style.display = 'block';
+                setTimeout(() => { popup.style.display = 'none'; }, 6000);
+            });
+
+            socket.on('flood-warning', (msg) => alert(msg));
+            socket.on('error-msg', (msg) => alert(msg));
+        }
+
+        async function loadMusicLibrary() {
+            try {
+                const res = await fetch('/api/music-list');
+                const data = await res.json();
+                if (data.success) {
+                    const selectEl = document.getElementById('room-music-select');
+                    selectEl.innerHTML = '<option value="">-- เลือกเพลงในคลัง --</option>';
+                    data.musicList.forEach(m => {
+                        const opt = document.createElement('option');
+                        opt.value = m.url;
+                        opt.innerText = m.originalName;
+                        selectEl.appendChild(opt);
+                    });
+                }
+            } catch (err) {
+                console.error("โหลดคลังเพลงล้มเหลว:", err);
+            }
+        }
+
+        async function uploadMusicToLibrary(inputEl) {
+            const file = inputEl.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const res = await fetch('/api/upload', { method: 'POST', body: formData });
+            const data = await res.json();
+            
+            if (data.success) {
+                alert('อัปโหลดไฟล์เพลงเรียบร้อยแล้ว!');
+                await loadMusicLibrary();
+                const selectEl = document.getElementById('room-music-select');
+                selectEl.value = data.fileUrl;
+            } else {
+                alert('อัปโหลดล้มเหลว: ' + data.message);
+            }
+            inputEl.value = '';
+        }
+
+        function playSelectedMusic() {
+            const selectEl = document.getElementById('room-music-select');
+            const audioUrl = selectEl.value;
+            const audioName = selectEl.options[selectEl.selectedIndex]?.text;
+
+            if (!audioUrl) return alert('กรุณาเลือกเพลงจากรายการในคลังก่อนกดเล่น');
+
+            const audioEl = document.getElementById('room-audio-element');
+            audioEl.src = audioUrl;
+            audioEl.load();
+
+            audioEl.play().then(() => {
+                socket.emit('room-music-control', {
+                    roomId: currentTarget.id,
+                    action: 'play',
+                    audioUrl: audioUrl,
+                    audioName: audioName,
+                    currentTime: 0
+                });
+            }).catch(e => {
+                console.error("Play error:", e);
+                alert('เบราว์เซอร์บล็อกการเล่นเสียงอัตโนมัติ กรุณากดปุ่มบนหน้าเว็บเพื่ออนุญาตก่อน');
+            });
+        }
+
+        function syncMusicAction(action) {
+            const audioEl = document.getElementById('room-audio-element');
+            if (action === 'pause') {
+                audioEl.pause();
+                socket.emit('room-music-control', { roomId: currentTarget.id, action: 'pause' });
+            }
+        }
+
+        function renderRoomList(rooms) {
+            const list = document.getElementById('room-list');
+            document.getElementById('room-count').innerText = rooms.length + 2; // รวมห้องกลางและห้องบันทึกข้อความ
+            
+            let html = `<li class="list-item" onclick="switchTarget('global', 'global', 'ห้องกลาง (Global Lobby)')">🌍 ห้องกลาง (Lobby)</li>`;
+            html += `<li class="list-item" onclick="switchTarget('room', 'save-log-room', 'ห้องบันทึกข้อความ')" style="background: #172554; border: 1px solid #1e40af;">💾 ห้องบันทึกข้อความ</li>`;
+            
+            rooms.forEach(r => {
+                if (r.id !== 'save-log-room') {
+                    html += `<li class="list-item" onclick="switchTarget('room', '${r.id}', '${r.name}')">💬 ${r.name}</li>`;
+                }
+            });
+            list.innerHTML = html;
+        }
+
+        function renderCurrentRoomMembers(members) {
+            const list = document.getElementById('current-room-user-list');
+            document.getElementById('current-room-user-count').innerText = members.length;
+            let html = '';
+            members.forEach(m => {
+                html += `<li class="list-item" style="background:#162032;" onclick="startDM('${m.username}')">👤 ${m.username}</li>`;
+            });
+            list.innerHTML = html;
+        }
+
+        function renderUserList(users) {
+            const list = document.getElementById('user-list');
+            document.getElementById('user-count').innerText = users.length;
+            let html = '';
+            users.forEach(u => {
+                if (u.username === currentUser.username) return;
+                html += `<li class="list-item" onclick="startDM('${u.username}')">🟢 ${u.username}</li>`;
+            });
+            list.innerHTML = html;
+        }
+
+        function switchTarget(type, id, name) {
+            currentTarget = { type, id, name };
+            document.getElementById('current-chat-title').innerHTML = `กำลังคุยกับ: <span style="color: #f97316;">🟠 ${name}</span>`;
+            document.getElementById('chat-messages').innerHTML = '';
+            
+            document.getElementById('room-audio-element').pause();
+            document.getElementById('now-playing-song').innerText = 'ยังไม่ได้เล่นเพลง';
+
+            if (type === 'room' || type === 'global') socket.emit('join-room-socket', id);
+            if (window.innerWidth <= 768) document.getElementById('sidebar-drawer').classList.remove('active');
+        }
+
+        function startDM(username) {
+            currentTarget = { type: 'dm', targetUser: username, name: `DM: ${username}` };
+            document.getElementById('current-chat-title').innerHTML = `กำลังคุยกับ: <span style="color: #f97316;">🔒 แชทส่วนตัว: ${username}</span>`;
+            document.getElementById('chat-messages').innerHTML = '';
+            if (window.innerWidth <= 768) document.getElementById('sidebar-drawer').classList.remove('active');
+        }
+
+        function createRoom() {
+            const roomName = prompt('ชื่อห้องใหม่:');
+            if (roomName && roomName.trim() !== '') socket.emit('create-room', roomName.trim());
+        }
+
+        function shareLocation() {
+            if (!navigator.geolocation) {
+                return alert('เบราว์เซอร์ของคุณไม่รองรับการระบุตำแหน่ง (Geolocation)');
+            }
+            
+            navigator.geolocation.getCurrentPosition((position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                const mapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
+                const text = `📍 **แชร์ตำแหน่งของฉัน:**\nพิกัด: ${lat.toFixed(6)}, ${lon.toFixed(6)}\n🔗 [คลิกเพื่อเปิดแผนที่ใน Google Maps](${mapsUrl})`;
+
+                socket.emit('send-message', {
+                    type: currentTarget.type === 'dm' ? 'dm' : currentTarget.type,
+                    targetId: currentTarget.id,
+                    targetUser: currentTarget.targetUser,
+                    text: text
+                });
+            }, (error) => {
+                alert('ไม่สามารถดึงตำแหน่งได้: ' + error.message);
+            }, { enableHighAccuracy: true, timeout: 10000 });
+        }
+
+        async function uploadAndSendFile(inputElement) {
+            const file = inputElement.files[0];
+            if (!file) return;
+            const formData = new FormData();
+            formData.append('file', file);
+            const res = await fetch('/api/upload', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.success) {
+                socket.emit('send-message', {
+                    type: currentTarget.type === 'dm' ? 'dm' : currentTarget.type,
+                    targetId: currentTarget.id,
+                    targetUser: currentTarget.targetUser,
+                    text: `แนบไฟล์: ${data.originalName}`,
+                    fileUrl: data.fileUrl,
+                    fileName: data.originalName
+                });
+            }
+            inputElement.value = '';
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('message-input');
+            let text = input.value.trim();
+            if (!text) return;
+            socket.emit('send-message', {
+                type: currentTarget.type === 'dm' ? 'dm' : currentTarget.type,
+                targetId: currentTarget.id,
+                targetUser: currentTarget.targetUser,
+                text: text
+            });
+            input.value = '';
+        }
+
+        function appendMessage(data) {
+            const chatMessages = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = data.isDM ? 'message dm' : 'message';
+            
+            let formattedText = data.text.replace(/\n/g, '<br>');
+            formattedText = formattedText.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color:#38bdf8; text-decoration:underline;">$1</a>');
+
+            div.innerHTML = `
+                <div class="message-header"><span class="message-user">${data.sender}</span><span>🕒 ${data.time}</span></div>
+                <div>${formattedText}</div>
+                ${data.fileUrl ? `<div style="margin-top:5px;"><a href="${data.fileUrl}" target="_blank" style="color:#38bdf8;">📁 ${data.fileName}</a></div>` : ''}
+            `;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    </script>
+</body>
+</html>

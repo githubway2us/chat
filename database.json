@@ -1,0 +1,174 @@
+{
+  "users": [
+    {
+      "id": "admin_root",
+      "username": "admin",
+      "password": "$2b$10$.D2YNzNoyONsMEEyUuIbpOspK.cxGQpJ5je9fYSGKN/KeaLVYd2J6",
+      "role": "admin",
+      "status": "approved",
+      "nickname": "ผู้ดูแลระบบ",
+      "birthdate": "1990-01-01",
+      "office": "Headquarters",
+      "province": "Bangkok",
+      "facebookUrl": "https://facebook.com"
+    },
+    {
+      "id": "user_1788588143032",
+      "username": "Geomanss",
+      "password": "$2b$10$.1NPNOoLYN6vG3rK8M1i1Ozjm1LxAdX52h1uA7UcT89Xr8BwUHX3.",
+      "status": "approved",
+      "role": "member",
+      "facebookUrl": "",
+      "birthdate": "2026-09-05",
+      "office": "Hh",
+      "province": "Nk",
+      "nickname": "James",
+      "details": "-"
+    },
+    {
+      "id": "user_1788588602634",
+      "username": "job",
+      "password": "$2b$10$IDk4xhPYfEn5mIt8kydm6ewmKBjmn4PZAxICJb0NA4ND1j/wTe/fK",
+      "status": "approved",
+      "role": "member",
+      "facebookUrl": "",
+      "birthdate": "1990-01-01",
+      "office": "123",
+      "province": "123",
+      "nickname": "job",
+      "details": "-"
+    },
+    {
+      "id": "user_1788608362043",
+      "username": "moo",
+      "password": "$2b$10$tvp0zTr8vRtyBLdsw6rP3.yb3lPOtYitoMfHQM161zbOprprGxqle",
+      "status": "approved",
+      "role": "member",
+      "facebookUrl": "",
+      "birthdate": "2000-01-01",
+      "office": "สนง.พมจ.แพร่",
+      "province": "กระบี่",
+      "nickname": "mo",
+      "details": "-"
+    },
+    {
+      "id": "user_1788609594289",
+      "username": "กนิษฐา",
+      "password": "$2b$10$DrMyXasRL3EWTAnN//wv3OAEnR5C/8xLO8Z8MFtQd.t4Cbp.6ITzG",
+      "status": "approved",
+      "role": "member",
+      "facebookUrl": "",
+      "birthdate": "1972-12-29",
+      "office": "",
+      "province": "กาญจนบุรี",
+      "nickname": "ฐา",
+      "details": "มนุษย์มากคำถาม"
+    },
+    {
+      "id": "user_1788696915897",
+      "username": "You",
+      "password": "$2b$10$GmnKQltZLZEv36eMLxq3keU78UneQNts5RfYZu37iC2MD/ENAtyIy",
+      "status": "approved",
+      "role": "member",
+      "facebookUrl": "",
+      "birthdate": "2026-09-06",
+      "office": "Kk",
+      "province": "Uu",
+      "nickname": "You",
+      "details": "-"
+    },
+    {
+      "id": "user_1788713123286",
+      "username": "เจมส์",
+      "password": "$2b$10$0SZGwNaAAV0Zl5OWASC0LuYL9rvgwOTugKPltSHhtJsAcLdcpxbyG",
+      "status": "approved",
+      "role": "member",
+      "facebookUrl": "",
+      "birthdate": "2026-09-06",
+      "office": "สนง.พมจ.แพร่",
+      "province": "กระบี่",
+      "nickname": "เจมส์",
+      "details": "-"
+    },
+    {
+      "id": "user_1788713558527",
+      "username": "เจมส์2",
+      "password": "$2b$10$JakruZcAlUX.GRg86D1xHukwaDFZOj6zgqADIi9dawhOEdKLKyxdi",
+      "status": "approved",
+      "role": "member",
+      "facebookUrl": "",
+      "birthdate": "2026-09-06",
+      "office": "สนง.พมจ.แพร่",
+      "province": "กระบี่",
+      "nickname": "เจมส์",
+      "details": "-"
+    },
+    {
+      "id": "user_1788713612030",
+      "username": "จงกล",
+      "password": "$2b$10$uqIW6Rb.BoGZQhHY/boxfeV.3ZGAlxyrPkGhYkG/91md//EmbvNt2",
+      "status": "approved",
+      "role": "member",
+      "facebookUrl": "",
+      "birthdate": "2026-09-06",
+      "office": "บ้าน",
+      "province": "โคราช",
+      "nickname": "กล",
+      "details": "-"
+    },
+    {
+      "id": "user_1788735976330",
+      "username": "agent",
+      "password": "$2b$10$ADo8Q6hiV8EAx3R7s..ACOwxtEgvbF5TEoZziPhPvjuFqls775Ige",
+      "status": "approved",
+      "role": "member",
+      "facebookUrl": "",
+      "birthdate": "2026-09-07",
+      "office": "PIP",
+      "province": "Nakornpathom",
+      "nickname": "a",
+      "details": "-"
+    }
+  ],
+  "rooms": [
+    {
+      "id": "room_1788607672024",
+      "name": "ห้องส่งงาน",
+      "createdBy": "job"
+    },
+    {
+      "id": "room_1788714195001",
+      "name": "ห้อง1",
+      "createdBy": "admin"
+    },
+    {
+      "id": "room_1788714199534",
+      "name": "ห้อง2",
+      "createdBy": "admin"
+    }
+  ],
+  "bannedUsers": [],
+  "reports": [
+    {
+      "id": "rep_1788588914451",
+      "reporter": "Geomanss",
+      "roomName": "DM: job",
+      "reason": "5555",
+      "time": "5/9/2569 13:15:14"
+    },
+    {
+      "id": "rep_1788591972462",
+      "reporter": "Geomanss",
+      "roomName": "ห้องกลาง (Global Lobby)",
+      "reason": "มีการส่งไฟล์",
+      "time": "5/9/2569 14:06:12"
+    },
+    {
+      "id": "rep_1788713252984",
+      "reporter": "เจมส์",
+      "roomName": "สาธารณะ",
+      "reason": "123",
+      "time": "9/6/2026, 11:47:32 PM"
+    }
+  ]
+}

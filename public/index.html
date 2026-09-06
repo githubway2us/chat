@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>คุยกัน — สนง.พมจ.นฐ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5F1E7; --surface:#FFFFFF; --surface-2:#FBF8F1;
+    --ink:#22262E; --ink-soft:#5B6270; --line:#E3DCC9;
+    --primary:#1F4E8C; --primary-dark:#163A68;
+    --accent:#E1594B; --accent-soft:#FBEAE7;
+    --success:#2E7D5B; --danger:#C0392B;
+    --radius:10px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%; margin:0;}
+  body{
+    font-family:'Sarabun',sans-serif; background:var(--bg); color:var(--ink);
+    overflow:hidden; height:100vh; height:100dvh;
+  }
+  button{font-family:inherit; cursor:pointer;}
+  input, select, textarea{font-family:inherit; font-size:16px;}
+  ::-webkit-scrollbar{width:8px; height:8px;}
+  ::-webkit-scrollbar-thumb{background:#D8D0BC; border-radius:8px;}
+
+  /* ============ หน้าจอเข้าสู่ระบบ / สมัครสมาชิก ============ */
+  #authScreen{
+    position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(31,78,140,0.07), transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(225,89,75,0.08), transparent 40%),
+      var(--bg);
+    padding:20px; overflow-y:auto;
+  }
+  .letterhead{
+    width:100%; max-width:460px; background:var(--surface); border:1px solid var(--line);
+    border-radius:16px; overflow:hidden; box-shadow:0 30px 60px -20px rgba(31,45,66,0.25);
+  }
+  .letterhead-bar{
+    background:var(--primary); color:#fff; padding:20px 26px 16px 26px;
+    border-bottom:4px solid var(--accent);
+  }
+  .letterhead-bar .mark{font-size:1.6rem; line-height:1;}
+  .letterhead-bar h1{font-size:1.15rem; margin:8px 0 2px 0; font-weight:600;}
+  .letterhead-bar p{margin:0; font-size:0.78rem; color:#D9E4F2; font-weight:300;}
+  .auth-body{padding:22px 26px 26px 26px;}
+  .auth-tabs{display:flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; margin-bottom:18px;}
+  .auth-tabs button{
+    flex:1; padding:11px; border:none; background:var(--surface-2); color:var(--ink-soft);
+    font-weight:600; font-size:0.88rem;
+  }
+  .auth-tabs button.active{background:var(--primary); color:#fff;}
+  .field{margin-bottom:12px;}
+  .field label{display:block; font-size:0.75rem; color:var(--ink-soft); margin-bottom:4px; font-weight:500;}
+  .field input, .field select, .field textarea{
+    width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:8px;
+    background:var(--surface-2); color:var(--ink);
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{outline:2px solid var(--primary); outline-offset:1px; border-color:var(--primary);}
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:11px 16px; border-radius:8px; border:none; font-weight:600; font-size:0.9rem;
+  }
+  .btn-primary{background:var(--primary); color:#fff; width:100%;}
+  .btn-primary:hover{background:var(--primary-dark);}
+  .btn-accent{background:var(--accent); color:#fff;}
+  .btn-ghost{background:transparent; color:var(--ink-soft); border:1px solid var(--line);}
+  .btn-danger{background:var(--danger); color:#fff;}
+  .btn-success{background:var(--success); color:#fff;}
+  .btn:disabled{opacity:0.5; cursor:not-allowed;}
+  .form-msg{font-size:0.82rem; margin-top:10px; min-height:1.2em;}
+  .form-msg.error{color:var(--danger);}
+  .form-msg.success{color:var(--success);}
+  .auth-form{display:none;}
+  .auth-form.active{display:block;}
+
+  /* ============ โครงหลักของแอปหลังล็อกอิน ============ */
+  #appScreen{display:none; height:100%; flex-direction:column;}
+  #appScreen.active{display:flex;}
+
+  .topbar{
+    background:var(--primary); color:#fff; padding:10px 16px; display:flex; align-items:center;
+    gap:12px; border-bottom:3px solid var(--accent); flex-shrink:0;
+  }
+  .topbar .mark{font-size:1.3rem;}
+  .topbar .brand{font-weight:700; font-size:1rem; white-space:nowrap;}
+  .topbar .subject{
+    flex:1; min-width:0; font-size:0.82rem; color:#D9E4F2; overflow:hidden;
+    text-overflow:ellipsis; white-space:nowrap;
+  }
+  .topbar .subject b{color:#fff; font-weight:600;}
+  .topbar-actions{display:flex; align-items:center; gap:6px;}
+  .icon-btn{
+    background:rgba(255,255,255,0.14); border:none; color:#fff; width:36px; height:36px;
+    border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:1rem;
+    position:relative;
+  }
+  .icon-btn:hover{background:rgba(255,255,255,0.24);}
+  .icon-btn .badge-dot{
+    position:absolute; top:-2px; right:-2px; background:var(--accent); color:#fff;
+    font-size:0.6rem; min-width:16px; height:16px; border-radius:8px; display:flex;
+    align-items:center; justify-content:center; padding:0 3px; border:2px solid var(--primary);
+  }
+  .user-chip{
+    display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.14);
+    padding:5px 10px 5px 6px; border-radius:20px; font-size:0.8rem; white-space:nowrap;
+  }
+  .user-chip .avatar{
+    width:22px; height:22px; border-radius:50%; background:var(--accent); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:0.72rem; font-weight:700;
+  }
+
+  .app-body{flex:1; display:flex; min-height:0; position:relative;}
+
+  /* --- แถบด้านซ้าย: เมนูห้อง / ผู้ใช้ออนไลน์ / DM --- */
+  .sidebar{
+    width:260px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--line);
+    display:flex; flex-direction:column; overflow-y:auto; transition:transform 0.25s ease;
+  }
+  .side-section{padding:14px 14px 6px 14px;}
+  .side-section h3{
+    margin:0 0 8px 0; font-size:0.72rem; color:var(--ink-soft); font-weight:600;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .side-item{
+    display:flex; align-items:center; gap:8px; padding:9px 10px; border-radius:8px;
+    cursor:pointer; font-size:0.86rem; margin-bottom:2px; position:relative;
+  }
+  .side-item:hover{background:var(--surface-2);}
+  .side-item.active{background:var(--accent-soft); color:var(--accent); font-weight:600;}
+  .side-item .dot{width:8px; height:8px; border-radius:50%; background:var(--success); flex-shrink:0;}
+  .side-item .name{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .side-item .unread{
+    background:var(--accent); color:#fff; font-size:0.65rem; min-width:18px; height:18px;
+    border-radius:9px; display:flex; align-items:center; justify-content:center; padding:0 4px;
+  }
+  .new-room-row{display:flex; gap:6px; padding:0 14px 12px 14px;}
+  .new-room-row input{flex:1; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--surface-2); font-size:0.82rem;}
+  .new-room-row button{padding:8px 12px; border-radius:8px; border:none; background:var(--primary); color:#fff; font-size:0.8rem; font-weight:600;}
+  .empty-hint{color:var(--ink-soft); font-size:0.78rem; padding:4px 10px 10px 10px;}
+
+  /* --- พื้นที่แชทกลาง --- */
+  .chat-main{flex:1; min-width:0; display:flex; flex-direction:column; background:var(--bg);}
+  .chat-scroll{flex:1; overflow-y:auto; padding:18px 20px;}
+  .day-msg-empty{text-align:center; color:var(--ink-soft); font-size:0.85rem; margin-top:40px;}
+  .msg-row{display:flex; margin-bottom:12px; max-width:78%;}
+  .msg-row.mine{margin-left:auto; flex-direction:row-reverse;}
+  .msg-bubble{
+    background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:9px 13px;
+    box-shadow:0 2px 6px rgba(31,45,66,0.05);
+  }
+  .msg-row.mine .msg-bubble{background:var(--primary); color:#fff; border-color:var(--primary);}
+  .msg-row.system .msg-bubble{background:var(--surface-2); color:var(--ink-soft); font-style:italic; font-size:0.82rem;}
+  .msg-meta{font-size:0.72rem; color:var(--ink-soft); margin-bottom:3px; display:flex; gap:6px;}
+  .msg-row.mine .msg-meta{color:#D9E4F2; justify-content:flex-end;}
+  .msg-text{font-size:0.92rem; white-space:pre-wrap; word-break:break-word;}
+  .msg-file{margin-top:6px; display:inline-flex; align-items:center; gap:6px; font-size:0.82rem;}
+  .msg-file a{color:inherit; text-decoration:underline;}
+  .msg-audio{margin-top:6px; width:220px; max-width:100%;}
+  .msg-img{margin-top:6px; max-width:220px; border-radius:8px; display:block;}
+  .dm-tag{background:var(--accent-soft); color:var(--accent); font-size:0.65rem; padding:1px 6px; border-radius:6px; font-weight:600;}
+
+  .composer{display:flex; align-items:flex-end; gap:8px; padding:12px 16px; border-top:1px solid var(--line); background:var(--surface); flex-shrink:0;}
+  .composer textarea{
+    flex:1; resize:none; max-height:110px; padding:11px 14px; border:1px solid var(--line);
+    border-radius:20px; background:var(--surface-2); font-size:0.92rem; line-height:1.35;
+  }
+  .composer textarea:focus{outline:none; border-color:var(--primary);}
+  .composer .icon-btn{background:var(--surface-2); color:var(--ink-soft); border:1px solid var(--line);}
+  .composer .send-btn{background:var(--primary); color:#fff; width:40px; height:40px; border-radius:50%; border:none; font-size:1rem; flex-shrink:0;}
+  .composer .send-btn:hover{background:var(--primary-dark);}
+  .mute-banner{
+    background:var(--accent-soft); color:var(--danger); text-align:center; padding:8px; font-size:0.82rem; font-weight:600;
+  }
+
+  /* --- แผงขวา: สมาชิกห้อง + เพลงประจำห้อง --- */
+  .context-panel{
+    width:250px; flex-shrink:0; background:var(--surface); border-left:1px solid var(--line);
+    display:none; flex-direction:column; overflow-y:auto;
+  }
+  .context-panel.show{display:flex;}
+  .context-panel h3{font-size:0.75rem; color:var(--ink-soft); margin:14px 14px 8px 14px; font-weight:600;}
+  .member-item{display:flex; align-items:center; gap:8px; padding:6px 14px; font-size:0.84rem;}
+  .member-item .dot{width:7px; height:7px; border-radius:50%; background:var(--success);}
+  .music-box{margin:0 14px 16px 14px; padding:12px; background:var(--surface-2); border:1px solid var(--line); border-radius:10px;}
+  .music-box select{width:100%; padding:8px; border-radius:6px; border:1px solid var(--line); font-size:0.8rem; margin-bottom:8px;}
+  .music-box .music-controls{display:flex; gap:6px; margin-bottom:8px;}
+  .music-box .music-controls button{flex:1; padding:7px; font-size:0.78rem; border-radius:6px; border:none;}
+  .music-box .now-playing{font-size:0.76rem; color:var(--ink-soft); word-break:break-word;}
+  .music-box audio{width:100%; margin-top:6px;}
+
+  /* --- ปุ่มมือถือ --- */
+  .mobile-nav-toggle, .mobile-panel-toggle{display:none; background:rgba(255,255,255,0.14); border:none; color:#fff; width:36px; height:36px; border-radius:8px; font-size:1rem;}
+
+  /* ============ โมดัลทั่วไป ============ */
+  .modal-overlay{
+    display:none; position:fixed; inset:0; z-index:80; background:rgba(20,24,32,0.55);
+    align-items:center; justify-content:center; padding:16px;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal-box{
+    width:100%; max-width:560px; background:var(--surface); border-radius:16px;
+    max-height:88vh; max-height:88dvh; overflow-y:auto; box-shadow:0 30px 60px -20px rgba(0,0,0,0.4);
+  }
+  .modal-box.wide{max-width:820px;}
+  .modal-head{
+    padding:16px 20px; border-bottom:1px solid var(--line); display:flex; align-items:center;
+    justify-content:space-between; position:sticky; top:0; background:var(--surface); z-index:1;
+  }
+  .modal-head h2{margin:0; font-size:1.05rem;}
+  .modal-head button{background:none; border:none; font-size:1.2rem; color:var(--ink-soft);}
+  .modal-content{padding:18px 20px;}
+
+  /* --- แผงแอดมิน --- */
+  .admin-tabs{display:flex; gap:6px; border-bottom:1px solid var(--line); padding:0 20px; overflow-x:auto;}
+  .admin-tabs button{
+    padding:10px 12px; border:none; background:none; color:var(--ink-soft); font-size:0.84rem;
+    font-weight:600; border-bottom:3px solid transparent; white-space:nowrap;
+  }
+  .admin-tabs button.active{color:var(--primary); border-color:var(--primary);}
+  .admin-pane{display:none;}
+  .admin-pane.active{display:block;}
+  table.admin-table{width:100%; border-collapse:collapse; font-size:0.82rem;}
+  table.admin-table th, table.admin-table td{padding:8px 6px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top;}
+  table.admin-table th{color:var(--ink-soft); font-weight:600; font-size:0.75rem;}
+  .row-actions{display:flex; gap:5px; flex-wrap:wrap;}
+  .row-actions button{padding:5px 8px; font-size:0.72rem; border-radius:6px; border:none;}
+  .status-tag{padding:2px 8px; border-radius:20px; font-size:0.7rem; font-weight:600;}
+  .status-tag.pending{background:#FFF3CD; color:#8A6D1D;}
+  .status-tag.approved{background:#DDF0E4; color:var(--success);}
+  .toggle-row{display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--line);}
+  .switch{position:relative; width:44px; height:24px; flex-shrink:0;}
+  .switch input{opacity:0; width:0; height:0;}
+  .switch .slider{position:absolute; inset:0; background:#CBD3DE; border-radius:24px; transition:0.2s; cursor:pointer;}
+  .switch .slider:before{content:""; position:absolute; width:18px; height:18px; left:3px; top:3px; background:#fff; border-radius:50%; transition:0.2s;}
+  .switch input:checked + .slider{background:var(--danger);}
+  .switch input:checked + .slider:before{transform:translateX(20px);}
+
+  /* --- toast / popup --- */
+  #toastStack{position:fixed; top:16px; right:16px; z-index:100; display:flex; flex-direction:column; gap:8px; max-width:320px;}
+  .toast{background:var(--ink); color:#fff; padding:11px 15px; border-radius:10px; font-size:0.85rem; box-shadow:0 10px 25px rgba(0,0,0,0.3);}
+  .toast.warn{background:#8A6D1D;}
+  .toast.error{background:var(--danger);}
+  .toast.admin{background:var(--primary);}
+
+  @media (max-width: 900px){
+    .sidebar{position:absolute; top:0; bottom:0; left:0; z-index:30; transform:translateX(-100%); box-shadow:10px 0 30px rgba(0,0,0,0.15);}
+    .sidebar.show{transform:translateX(0);}
+    .context-panel{position:absolute; top:0; bottom:0; right:0; z-index:30; transform:translateX(100%); box-shadow:-10px 0 30px rgba(0,0,0,0.15); width:80vw; max-width:280px;}
+    .context-panel.show{transform:translateX(0); display:flex;}
+    .mobile-nav-toggle, .mobile-panel-toggle{display:flex; align-items:center; justify-content:center;}
+    .topbar .brand{display:none;}
+    .msg-row{max-width:90%;}
+    .field-row{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ หน้าจอเข้าสู่ระบบ / สมัครสมาชิก ============ -->
+<div id="authScreen">
+  <div class="letterhead">
+    <div class="letterhead-bar">
+      <div class="mark">🏛️</div>
+      <h1>ระบบสนทนา สนง.พมจ.นฐ</h1>
+      <p>สำนักงานพัฒนาสังคมและความมั่นคงของมนุษย์จังหวัดนครปฐม</p>
+    </div>
+    <div class="auth-body">
+      <div class="auth-tabs">
+        <button class="active" id="authTabLogin" onclick="switchAuthTab('login')">เข้าสู่ระบบ</button>
+        <button id="authTabRegister" onclick="switchAuthTab('register')">สมัครสมาชิก</button>
+      </div>
+
+      <form class="auth-form active" id="loginForm" onsubmit="return handleLogin(event)">
+        <div class="field">
+          <label>ชื่อผู้ใช้</label>
+          <input type="text" id="loginUsername" autocomplete="username" required>
+        </div>
+        <div class="field">
+          <label>รหัสผ่าน</label>
+          <input type="password" id="loginPassword" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn btn-primary">เข้าสู่ระบบ</button>
+        <div class="form-msg" id="loginMsg"></div>
+      </form>
+
+      <form class="auth-form" id="registerForm" onsubmit="return handleRegister(event)">
+        <div class="field-row">
+          <div class="field"><label>ชื่อผู้ใช้</label><input type="text" id="regUsername" required minlength="3"></div>
+          <div class="field"><label>รหัสผ่าน</label><input type="password" id="regPassword" required minlength="6"></div>
+        </div>
+        <div class="field"><label>ชื่อเล่น / ชื่อที่แสดง</label><input type="text" id="regNickname" required></div>
+        <div class="field-row">
+          <div class="field"><label>วันเกิด</label><input type="date" id="regBirthdate"></div>
+          <div class="field"><label>จังหวัด</label><input type="text" id="regProvince" placeholder="เช่น นครปฐม"></div>
+        </div>
+        <div class="field"><label>หน่วยงาน / สำนักงาน</label><input type="text" id="regOffice" placeholder="เช่น สนง.พมจ.นฐ"></div>
+        <div class="field"><label>ลิงก์ Facebook (ถ้ามี)</label><input type="url" id="regFacebook" placeholder="https://facebook.com/..."></div>
+        <div class="field"><label>รายละเอียดเพิ่มเติม</label><textarea id="regDetails" rows="2" placeholder="แนะนำตัวสั้นๆ"></textarea></div>
+        <button type="submit" class="btn btn-primary">ส่งคำขอสมัครสมาชิก</button>
+        <div class="form-msg" id="registerMsg"></div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ============ แอปหลังล็อกอิน ============ -->
+<div id="appScreen">
+  <div class="topbar">
+    <button class="mobile-nav-toggle" onclick="toggleSidebar()">☰</button>
+    <span class="mark">🏛️</span>
+    <span class="brand">คุยกัน · พมจ.นฐ</span>
+    <span class="subject" id="topbarSubject">เรื่อง: <b>ห้องสนทนาสาธารณะ</b></span>
+    <div class="topbar-actions">
+      <button class="icon-btn" id="adminNavBtn" style="display:none;" onclick="openAdminModal()" title="แผงผู้ดูแลระบบ">🛠️</button>
+      <button class="icon-btn" onclick="openReportModal()" title="รายงานปัญหา">🚩</button>
+      <span class="user-chip" id="myUserChip"></span>
+      <button class="icon-btn" onclick="logout()" title="ออกจากระบบ">⎋</button>
+      <button class="mobile-panel-toggle" id="mobilePanelToggle" style="display:none;" onclick="toggleContextPanel()">ℹ️</button>
+    </div>
+  </div>
+
+  <div class="mute-banner" id="muteBanner" style="display:none;">🔇 ผู้ดูแลระบบปิดกั้นการส่งข้อความชั่วคราว</div>
+
+  <div class="app-body">
+    <!-- แถบซ้าย -->
+    <div class="sidebar" id="sidebar">
+      <div class="side-section">
+        <h3>ห้องสนทนา</h3>
+        <div class="side-item" id="globalNavItem" onclick="switchToGlobal()">
+          <span class="dot"></span><span class="name">🌐 สาธารณะ (ทุกคน)</span>
+        </div>
+        <div id="roomsListEl"></div>
+      </div>
+      <div class="new-room-row">
+        <input type="text" id="newRoomName" placeholder="ตั้งชื่อห้องใหม่...">
+        <button onclick="createRoom()">สร้าง</button>
+      </div>
+
+      <div class="side-section">
+        <h3>ข้อความส่วนตัว (DM)</h3>
+        <div id="dmListEl"></div>
+        <div class="empty-hint" id="dmEmptyHint">แตะชื่อผู้ใช้ในรายการ "ออนไลน์" ด้านล่างเพื่อเริ่มทักส่วนตัว</div>
+      </div>
+
+      <div class="side-section" style="flex:1;">
+        <h3>ผู้ใช้ออนไลน์ <span id="onlineCount" style="font-weight:400;"></span></h3>
+        <div id="onlineListEl"></div>
+      </div>
+    </div>
+
+    <!-- กลาง: แชท -->
+    <div class="chat-main">
+      <div class="chat-scroll" id="chatScroll">
+        <div class="day-msg-empty">ยังไม่มีข้อความ — เริ่มทักทายกันได้เลย</div>
+      </div>
+      <div class="composer">
+        <button class="icon-btn" onclick="triggerFilePicker()" title="แนบไฟล์">📎</button>
+        <input type="file" id="fileInput" style="display:none;" onchange="handleFileSelected(event)">
+        <textarea id="msgInput" rows="1" placeholder="พิมพ์ข้อความ..." onkeydown="handleComposerKeydown(event)"></textarea>
+        <button class="send-btn" onclick="sendCurrentMessage()" title="ส่ง">➤</button>
+      </div>
+    </div>
+
+    <!-- ขวา: บริบทห้อง (สมาชิก + เพลง) -->
+    <div class="context-panel" id="contextPanel">
+      <h3>👥 สมาชิกในห้อง</h3>
+      <div id="roomMembersEl"></div>
+
+      <h3>🎵 เพลงประจำห้อง</h3>
+      <div class="music-box">
+        <select id="musicSelect"><option value="">— เลือกเพลงจากคลัง —</option></select>
+        <div class="music-controls">
+          <button class="btn-primary" onclick="broadcastMusicLoad()">โหลดให้ทุกคน</button>
+        </div>
+        <div class="music-controls">
+          <button class="btn-success" onclick="broadcastMusicPlay()">▶️ เล่น</button>
+          <button class="btn-ghost" onclick="broadcastMusicPause()">⏸️ หยุด</button>
+        </div>
+        <div class="now-playing" id="nowPlayingText">ยังไม่ได้เลือกเพลง</div>
+        <audio id="roomAudio" controls></audio>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ โมดัลรายงานปัญหา ============ -->
+<div class="modal-overlay" id="reportModal">
+  <div class="modal-box">
+    <div class="modal-head"><h2>🚩 รายงานปัญหา</h2><button onclick="closeReportModal()">✕</button></div>
+    <div class="modal-content">
+      <p class="empty-hint" style="padding:0 0 10px 0;">กำลังรายงานเกี่ยวกับ: <b id="reportContextLabel">สาธารณะ</b></p>
+      <div class="field">
+        <label>รายละเอียดปัญหา</label>
+        <textarea id="reportReason" rows="4" placeholder="อธิบายสิ่งที่พบเจอ..."></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="submitReport()">ส่งรายงาน</button>
+      <div class="form-msg" id="reportMsg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ แผงผู้ดูแลระบบ ============ -->
+<div class="modal-overlay" id="adminModal">
+  <div class="modal-box wide">
+    <div class="modal-head"><h2>🛠️ แผงผู้ดูแลระบบ</h2><button onclick="closeAdminModal()">✕</button></div>
+    <div class="admin-tabs">
+      <button class="active" id="adminTabUsers" onclick="switchAdminTab('users')">สมาชิก</button>
+      <button id="adminTabBanned" onclick="switchAdminTab('banned')">แบนแล้ว</button>
+      <button id="adminTabRooms" onclick="switchAdminTab('rooms')">ห้องสนทนา</button>
+      <button id="adminTabReports" onclick="switchAdminTab('reports')">รายงาน</button>
+      <button id="adminTabSystem" onclick="switchAdminTab('system')">ระบบ</button>
+    </div>
+    <div class="modal-content">
+      <div class="admin-pane active" id="adminPaneUsers">
+        <table class="admin-table">
+          <thead><tr><th>ผู้ใช้</th><th>ชื่อเล่น</th><th>หน่วยงาน</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
+          <tbody id="adminUsersBody"></tbody>
+        </table>
+      </div>
+      <div class="admin-pane" id="adminPaneBanned">
+        <table class="admin-table">
+          <thead><tr><th>ผู้ใช้</th><th>เหตุผล</th><th>เวลา</th></tr></thead>
+          <tbody id="adminBannedBody"></tbody>
+        </table>
+      </div>
+      <div class="admin-pane" id="adminPaneRooms">
+        <div style="margin-bottom:10px; display:flex; gap:6px;">
+          <button class="btn btn-danger" onclick="bulkDeleteRooms()">ลบห้องที่เลือก</button>
+        </div>
+        <table class="admin-table">
+          <thead><tr><th><input type="checkbox" onclick="toggleAllRoomChecks(this)"></th><th>ชื่อห้อง</th><th>สร้างโดย</th><th>จัดการ</th></tr></thead>
+          <tbody id="adminRoomsBody"></tbody>
+        </table>
+      </div>
+      <div class="admin-pane" id="adminPaneReports">
+        <table class="admin-table">
+          <thead><tr><th>ผู้แจ้ง</th><th>บริบท</th><th>เหตุผล</th><th>เวลา</th></tr></thead>
+          <tbody id="adminReportsBody"></tbody>
+        </table>
+      </div>
+      <div class="admin-pane" id="adminPaneSystem">
+        <div class="toggle-row">
+          <div><b>ปิดกั้นการส่งข้อความทั้งระบบ</b><div class="empty-hint" style="padding:2px 0 0 0;">สมาชิกทั่วไปจะส่งข้อความไม่ได้ชั่วคราว</div></div>
+          <label class="switch"><input type="checkbox" id="globalMuteToggle" onchange="toggleGlobalMute(this.checked)"><span class="slider"></span></label>
+        </div>
+        <div class="field" style="margin-top:16px;">
+          <label>ประกาศแจ้งเตือนถึงทุกคน (ป๊อปอัป)</label>
+          <textarea id="broadcastMsg" rows="3" placeholder="ข้อความประกาศ..."></textarea>
+        </div>
+        <button class="btn btn-accent" onclick="sendBroadcast()">📢 ส่งประกาศ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ป๊อปอัปประกาศจากแอดมิน ============ -->
+<div class="modal-overlay" id="popupModal">
+  <div class="modal-box" style="max-width:420px; text-align:center;">
+    <div class="modal-content">
+      <div style="font-size:2rem; margin-bottom:8px;">📢</div>
+      <p id="popupMsgText" style="font-size:0.95rem;"></p>
+      <button class="btn btn-primary" onclick="closePopupModal()">รับทราบ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ แจ้งผลการสมัครสมาชิก ============ -->
+<div class="modal-overlay" id="registerSuccessModal">
+  <div class="modal-box" style="max-width:460px;">
+    <div class="modal-content" style="text-align:center; padding:30px 26px 26px 26px;">
+      <div style="font-size:2.4rem; margin-bottom:12px;">📨</div>
+      <h2 style="margin:0 0 12px 0; font-size:1.05rem; color:var(--primary);">ส่งคำขอสมัครสมาชิกเรียบร้อยแล้ว</h2>
+      <p style="font-size:0.86rem; color:var(--ink-soft); line-height:1.7; margin:0 0 20px 0; text-align:left;">
+        ระบบได้รับข้อมูลการสมัครสมาชิกของท่านไว้เรียบร้อยแล้ว ขณะนี้บัญชีของท่านอยู่ในสถานะ<b style="color:var(--ink);">รอการตรวจสอบและอนุมัติจากผู้ดูแลระบบ</b>
+        <br><br>
+        เมื่อผู้ดูแลระบบดำเนินการอนุมัติบัญชีเรียบร้อยแล้ว ท่านจึงจะสามารถเข้าสู่ระบบและใช้งานได้ตามปกติ ทั้งนี้ กรุณาติดต่อผู้ดูแลระบบหากมีข้อสงสัยประการใดเพิ่มเติม
+      </p>
+      <button class="btn btn-primary" onclick="closeRegisterSuccessModal()">รับทราบ</button>
+    </div>
+  </div>
+</div>
+
+<div id="toastStack"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+// ============================================================================
+// สถานะรวมของแอป (in-memory — ไม่มีระบบ session/token จากเซิร์ฟเวอร์ จึงเก็บ
+// ข้อมูลผู้ใช้ที่ล็อกอินไว้ใน localStorage ฝั่งเบราว์เซอร์เพื่อคงสถานะไว้ตอนรีเฟรช)
+// ============================================================================
+let me = null;                 // ผู้ใช้ที่ล็อกอินอยู่ (ไม่เก็บฟิลด์ password)
+let socket = null;
+let rooms = [];                // รายชื่อห้องทั้งหมดจากเซิร์ฟเวอร์
+let onlineUsers = [];          // ผู้ใช้ที่ออนไลน์อยู่ตอนนี้ (จาก update-users)
+let roomMembersCurrent = [];   // สมาชิกในห้องที่เปิดอยู่ตอนนี้
+let activeContext = { type: 'global' };
+let threads = {};              // key -> [{mine, sender, nickname, text, fileUrl, fileName, time, system}]
+let unreadCounts = {};         // key -> จำนวนข้อความที่ยังไม่ได้อ่าน
+let dmUsernames = [];          // รายชื่อผู้ใช้ที่เคยคุย DM ด้วย (แสดงเป็นรายการทางซ้าย)
+let musicList = [];
+let currentRoomTrackUrl = null;
+let applyingRemoteAudioState = false; // กันลูปตอนซิงค์เสียงจากรีโมต
+
+const STORAGE_KEY = 'chatapp_me_v1';
+
+function contextKey(ctx) {
+    if (ctx.type === 'global') return 'global';
+    if (ctx.type === 'room') return `room:${ctx.id}`;
+    if (ctx.type === 'dm') return `dm:${ctx.username}`;
+    return 'global';
+}
+
+// ============================================================================
+// เข้าสู่ระบบ / สมัครสมาชิก
+// ============================================================================
+function switchAuthTab(tab) {
+    const isLogin = tab === 'login';
+    document.getElementById('authTabLogin').classList.toggle('active', isLogin);
+    document.getElementById('authTabRegister').classList.toggle('active', !isLogin);
+    document.getElementById('loginForm').classList.toggle('active', isLogin);
+    document.getElementById('registerForm').classList.toggle('active', !isLogin);
+}
+
+async function apiPost(url, body) {
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body || {})
+    });
+    let data = {};
+    try { data = await res.json(); } catch(e) {}
+    return { ok: res.ok, status: res.status, data };
+}
+
+async function handleLogin(e) {
+    e.preventDefault();
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const msgEl = document.getElementById('loginMsg');
+    msgEl.textContent = ''; msgEl.className = 'form-msg';
+
+    const { ok, data } = await apiPost('/api/login', { username, password });
+    if (!ok || !data.success) {
+        msgEl.textContent = (data && data.message) || 'เข้าสู่ระบบไม่สำเร็จ';
+        msgEl.className = 'form-msg error';
+        return false;
+    }
+
+    const userSafe = { ...data.user };
+    delete userSafe.password; // ไม่เก็บ hash รหัสผ่านไว้ฝั่งไคลเอนต์
+    me = userSafe;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(me));
+    enterApp();
+    return false;
+}
+
+async function handleRegister(e) {
+    e.preventDefault();
+    const payload = {
+        username: document.getElementById('regUsername').value.trim(),
+        password: document.getElementById('regPassword').value,
+        nickname: document.getElementById('regNickname').value.trim(),
+        birthdate: document.getElementById('regBirthdate').value,
+        province: document.getElementById('regProvince').value.trim(),
+        office: document.getElementById('regOffice').value.trim(),
+        facebookUrl: document.getElementById('regFacebook').value.trim(),
+        details: document.getElementById('regDetails').value.trim()
+    };
+    const msgEl = document.getElementById('registerMsg');
+    msgEl.textContent = ''; msgEl.className = 'form-msg';
+
+    const { ok, data } = await apiPost('/api/register', payload);
+    if (!ok || !data.success) {
+        msgEl.textContent = (data && data.message) || 'สมัครสมาชิกไม่สำเร็จ';
+        msgEl.className = 'form-msg error';
+        return false;
+    }
+    document.getElementById('registerForm').reset();
+    openRegisterSuccessModal();
+    return false;
+}
+
+function openRegisterSuccessModal() {
+    document.getElementById('registerSuccessModal').classList.add('open');
+}
+
+function closeRegisterSuccessModal() {
+    document.getElementById('registerSuccessModal').classList.remove('open');
+    switchAuthTab('login');
+}
+
+function logout() {
+    if (socket) socket.disconnect();
+    localStorage.removeItem(STORAGE_KEY);
+    me = null;
+    document.getElementById('appScreen').classList.remove('active');
+    document.getElementById('authScreen').style.display = 'flex';
+    threads = {}; unreadCounts = {}; dmUsernames = [];
+}
+
+// ============================================================================
+// เข้าสู่แอปหลังล็อกอินสำเร็จ + เชื่อมต่อ Socket.IO
+// ============================================================================
+function enterApp() {
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('appScreen').classList.add('active');
+
+    const initials = (me.nickname || me.username || '?').trim().charAt(0).toUpperCase();
+    document.getElementById('myUserChip').innerHTML =
+        `<span class="avatar">${initials}</span><span>${escapeHtml(me.nickname || me.username)}</span>`;
+    document.getElementById('adminNavBtn').style.display = (me.role === 'admin') ? 'flex' : 'none';
+
+    connectSocket();
+    switchToGlobal();
+}
+
+function connectSocket() {
+    socket = io();
+
+    socket.on('connect', () => socket.emit('join', me));
+
+    socket.on('update-users', (users) => { onlineUsers = users; renderOnlineList(); });
+    socket.on('room-list', (list) => { rooms = list; renderRoomsList(); });
+
+    socket.on('room-members-update', (data) => {
+        if (activeContext.type === 'room' && activeContext.id === data.roomId) {
+            roomMembersCurrent = data.members || [];
+            renderRoomMembers();
+        }
+    });
+
+    socket.on('message', (payload) => handleIncomingMessage(payload));
+
+    socket.on('room-music-sync', (data) => applyRemoteMusicSync(data));
+
+    socket.on('room-renamed', (data) => {
+        const r = rooms.find(x => x.id === data.roomId);
+        if (r) r.name = data.newName;
+        renderRoomsList();
+        if (activeContext.type === 'room' && activeContext.id === data.roomId) {
+            activeContext.name = data.newName;
+            updateTopbarSubject();
+        }
+    });
+
+    socket.on('force-leave-room', (data) => {
+        if (activeContext.type === 'room' && activeContext.id === data.roomId) {
+            showToast('ห้องนี้ถูกลบโดยผู้ดูแลระบบ', 'warn');
+            switchToGlobal();
+        }
+    });
+
+    socket.on('global-mute-status', (data) => {
+        const banner = document.getElementById('muteBanner');
+        banner.style.display = (data.globalMute && me.role !== 'admin') ? 'block' : 'none';
+    });
+
+    socket.on('admin-popup', (data) => {
+        document.getElementById('popupMsgText').textContent = data.message;
+        document.getElementById('popupModal').classList.add('open');
+    });
+
+    socket.on('admin-report-alert', (report) => {
+        if (me.role === 'admin') showToast(`🚩 มีรายงานใหม่จาก ${report.reporter}`, 'admin');
+    });
+
+    socket.on('force-kick', (data) => {
+        if (data.username === me.username) {
+            alert(`บัญชีของคุณถูกดำเนินการโดยผู้ดูแลระบบ: ${data.reason}`);
+            logout();
+        }
+    });
+
+    socket.on('flood-warning', (msg) => showToast(msg, 'warn'));
+    socket.on('error-msg', (msg) => showToast(msg, 'error'));
+}
+
+// ============================================================================
+// สลับบริบทการแชท: สาธารณะ / ห้อง / DM
+// ============================================================================
+function switchToGlobal() {
+    activeContext = { type: 'global' };
+    if (socket && socket.currentJoinedRoom) leaveCurrentRoomVisual();
+    updateTopbarSubject();
+    highlightSidebar();
+    renderMessages();
+    document.getElementById('contextPanel').classList.remove('show');
+    closeSidebarMobile();
+}
+
+function joinRoom(room) {
+    activeContext = { type: 'room', id: room.id, name: room.name };
+    socket.emit('join-room-socket', room.id);
+    roomMembersCurrent = [];
+    updateTopbarSubject();
+    highlightSidebar();
+    renderMessages();
+    renderRoomMembers();
+    document.getElementById('contextPanel').classList.add('show');
+    loadMusicListIntoSelect();
+    document.getElementById('nowPlayingText').textContent = 'ยังไม่ได้เลือกเพลง';
+    document.getElementById('roomAudio').removeAttribute('src');
+    closeSidebarMobile();
+}
+
+function leaveCurrentRoomVisual() {
+    // เซิร์ฟเวอร์จะย้ายออกจากห้องเดิมอัตโนมัติเมื่อ join-room-socket ห้องใหม่/สาธารณะ
+    // (ฝั่งนี้แค่เคลียร์ state แสดงผล ไม่มี event ออกจากห้องเดี่ยวๆ ในเซิร์ฟเวอร์)
+}
+
+function openDM(user) {
+    if (user.username === me.username) return;
+    activeContext = { type: 'dm', username: user.username, nickname: user.nickname };
+    if (!dmUsernames.includes(user.username)) dmUsernames.push(user.username);
+    unreadCounts[contextKey(activeContext)] = 0;
+    updateTopbarSubject();
+    highlightSidebar();
+    renderDmList();
+    renderMessages();
+    document.getElementById('contextPanel').classList.remove('show');
+    closeSidebarMobile();
+}
+
+function updateTopbarSubject() {
+    const el = document.getElementById('topbarSubject');
+    if (activeContext.type === 'global') el.innerHTML = 'เรื่อง: <b>ห้องสนทนาสาธารณะ</b>';
+    else if (activeContext.type === 'room') el.innerHTML = `เรื่อง: <b>${escapeHtml(activeContext.name)}</b>`;
+    else if (activeContext.type === 'dm') el.innerHTML = `เรื่อง: <b>ข้อความส่วนตัวกับ ${escapeHtml(activeContext.nickname || activeContext.username)}</b>`;
+}
+
+function highlightSidebar() {
+    document.getElementById('globalNavItem').classList.toggle('active', activeContext.type === 'global');
+    renderRoomsList();
+    renderDmList();
+}
+
+// ============================================================================
+// การ์ดรายการ: ห้อง / DM / ผู้ใช้ออนไลน์
+// ============================================================================
+function renderRoomsList() {
+    const el = document.getElementById('roomsListEl');
+    if (!rooms.length) { el.innerHTML = ''; return; }
+    el.innerHTML = rooms.map(r => {
+        const key = `room:${r.id}`;
+        const active = activeContext.type === 'room' && activeContext.id === r.id;
+        const unread = unreadCounts[key] || 0;
+        return `<div class="side-item ${active ? 'active' : ''}" onclick='joinRoom(${JSON.stringify(r)})'>
+            <span class="dot" style="background:var(--ink-soft);"></span>
+            <span class="name">💬 ${escapeHtml(r.name)}</span>
+            ${unread > 0 ? `<span class="unread">${unread}</span>` : ''}
+        </div>`;
+    }).join('');
+}
+
+function renderDmList() {
+    const el = document.getElementById('dmListEl');
+    const hint = document.getElementById('dmEmptyHint');
+    if (!dmUsernames.length) { el.innerHTML = ''; hint.style.display = 'block'; return; }
+    hint.style.display = 'none';
+    el.innerHTML = dmUsernames.map(uname => {
+        const key = `dm:${uname}`;
+        const online = onlineUsers.find(u => u.username === uname);
+        const nickname = online ? online.nickname : uname;
+        const active = activeContext.type === 'dm' && activeContext.username === uname;
+        const unread = unreadCounts[key] || 0;
+        return `<div class="side-item ${active ? 'active' : ''}" onclick='openDM(${JSON.stringify({username: uname, nickname})})'>
+            <span class="dot" style="background:${online ? 'var(--success)' : '#CBD3DE'};"></span>
+            <span class="name">✉️ ${escapeHtml(nickname)}</span>
+            ${unread > 0 ? `<span class="unread">${unread}</span>` : ''}
+        </div>`;
+    }).join('');
+}
+
+function renderOnlineList() {
+    const el = document.getElementById('onlineListEl');
+    document.getElementById('onlineCount').textContent = `(${onlineUsers.length})`;
+    const others = onlineUsers.filter(u => u.username !== (me && me.username));
+    if (!others.length) { el.innerHTML = `<div class="empty-hint">ยังไม่มีคนอื่นออนไลน์</div>`; return; }
+    el.innerHTML = others.map(u => `
+        <div class="side-item" onclick='openDM(${JSON.stringify({username: u.username, nickname: u.nickname})})'>
+            <span class="dot"></span><span class="name">${escapeHtml(u.nickname || u.username)}</span>
+        </div>
+    `).join('');
+}
+
+function renderRoomMembers() {
+    const el = document.getElementById('roomMembersEl');
+    if (!roomMembersCurrent.length) { el.innerHTML = `<div class="empty-hint" style="padding-left:14px;">ยังไม่มีสมาชิกในห้อง</div>`; return; }
+    el.innerHTML = roomMembersCurrent.map(m => `
+        <div class="member-item"><span class="dot"></span>${escapeHtml(m.nickname || m.username)}</div>
+    `).join('');
+}
+
+async function createRoom() {
+    const input = document.getElementById('newRoomName');
+    const name = input.value.trim();
+    if (!name) return;
+    socket.emit('create-room', name);
+    input.value = '';
+}
+
+// ============================================================================
+// ส่ง / รับข้อความ
+// หมายเหตุสำคัญ: เซิร์ฟเวอร์รวมข้อความ "สาธารณะ" (io.emit) และข้อความ "ห้อง"
+// (io.to(roomId).emit) เข้ากับ event 'message' เดียวกันโดยไม่แนบ roomId มาด้วย
+// ทำให้ฝั่งไคลเอนต์แยกไม่ได้ 100% ว่าข้อความที่มาถึงเป็นของห้องไหนเมื่อผู้ใช้อยู่ในห้อง
+// (เพราะข้อความสาธารณะจะส่งถึงทุกคนไม่ว่าจะอยู่ห้องไหนก็ตาม) ในเวอร์ชันนี้จึงยึดหลัก
+// ปฏิบัติจริง: ข้อความที่ไม่ใช่ DM จะถูกใส่ไว้ในบริบทที่กำลังเปิดอยู่ขณะนั้น ถ้าต้องการ
+// แยกให้แม่นยำ 100% ควรแก้เซิร์ฟเวอร์ให้แนบ roomId/channel ไปกับ messageData ด้วย
+// ============================================================================
+function handleComposerKeydown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendCurrentMessage();
+    }
+}
+
+function sendCurrentMessage() {
+    const input = document.getElementById('msgInput');
+    const text = input.value.trim();
+    if (!text) return;
+    dispatchMessage({ text });
+    input.value = '';
+    input.style.height = 'auto';
+}
+
+function dispatchMessage({ text, fileUrl, fileName }) {
+    let payload = { text: text || '', fileUrl: fileUrl || null, fileName: fileName || null };
+
+    if (activeContext.type === 'global') {
+        payload.type = 'global';
+    } else if (activeContext.type === 'room') {
+        payload.type = 'room';
+        payload.targetId = activeContext.id;
+    } else if (activeContext.type === 'dm') {
+        payload.type = 'dm';
+        payload.targetUser = activeContext.username;
+        // เซิร์ฟเวอร์ echo ข้อความ DM กลับมาที่ตัวเองโดยไม่แนบชื่อผู้รับ จึงแสดงข้อความ
+        // ของเราเองแบบ optimistic ทันที แล้วไม่นำ echo ที่ได้กลับมาไปแสดงซ้ำอีกครั้ง
+        appendToThread(contextKey(activeContext), {
+            mine: true, sender: me.username, nickname: me.nickname,
+            text: payload.text, fileUrl: payload.fileUrl, fileName: payload.fileName,
+            time: nowTimeLabel()
+        });
+        renderMessages();
+    }
+
+    socket.emit('send-message', payload);
+}
+
+function handleIncomingMessage(payload) {
+    const isFromMe = payload.sender === me.username;
+
+    if (payload.isDM) {
+        if (isFromMe) return; // เราแสดงข้อความ DM ของตัวเองแบบ optimistic ไปแล้ว ไม่ต้องซ้ำ
+        const key = `dm:${payload.sender}`;
+        if (!dmUsernames.includes(payload.sender)) { dmUsernames.push(payload.sender); renderDmList(); }
+        appendToThread(key, {
+            mine: false, sender: payload.sender, nickname: payload.nickname,
+            text: payload.text, fileUrl: payload.fileUrl, fileName: payload.fileName, time: payload.time
+        });
+        if (activeContext.type === 'dm' && activeContext.username === payload.sender) {
+            renderMessages();
+        } else {
+            unreadCounts[key] = (unreadCounts[key] || 0) + 1;
+            renderDmList();
+            showToast(`✉️ ${payload.nickname || payload.sender}: ${payload.text || '[ไฟล์แนบ]'}`, 'admin');
+        }
+        return;
+    }
+
+    // ข้อความสาธารณะ/ห้อง — ใส่ไว้ในบริบทที่เปิดอยู่ตอนนี้ (ดูหมายเหตุด้านบน)
+    const key = contextKey(activeContext);
+    if (activeContext.type === 'dm') return; // กำลังเปิดหน้าต่าง DM อยู่ ไม่ปนกับข้อความห้อง/สาธารณะ
+    appendToThread(key, {
+        mine: isFromMe, sender: payload.sender, nickname: payload.nickname,
+        text: payload.text, fileUrl: payload.fileUrl, fileName: payload.fileName, time: payload.time
+    });
+    renderMessages();
+}
+
+function appendToThread(key, msg) {
+    if (!threads[key]) threads[key] = [];
+    threads[key].push(msg);
+}
+
+function renderMessages() {
+    const key = contextKey(activeContext);
+    const list = threads[key] || [];
+    const scroll = document.getElementById('chatScroll');
+
+    if (!list.length) {
+        scroll.innerHTML = `<div class="day-msg-empty">ยังไม่มีข้อความ — เริ่มทักทายกันได้เลย</div>`;
+        return;
+    }
+
+    scroll.innerHTML = list.map(m => {
+        const bubbleContent = [];
+        if (m.text) bubbleContent.push(`<div class="msg-text">${escapeHtml(m.text)}</div>`);
+        if (m.fileUrl) bubbleContent.push(renderFileAttachment(m.fileUrl, m.fileName));
+
+        return `<div class="msg-row ${m.mine ? 'mine' : ''}">
+            <div class="msg-bubble">
+                <div class="msg-meta"><span>${escapeHtml(m.nickname || m.sender)}</span><span>${escapeHtml(m.time || '')}</span></div>
+                ${bubbleContent.join('')}
+            </div>
+        </div>`;
+    }).join('');
+    scroll.scrollTop = scroll.scrollHeight;
+}
+
+function renderFileAttachment(url, name) {
+    const safeUrl = escapeHtml(url);
+    const safeName = escapeHtml(name || 'ไฟล์แนบ');
+    if (/\.(png|jpe?g|gif|webp)$/i.test(url)) {
+        return `<a href="${safeUrl}" target="_blank"><img class="msg-img" src="${safeUrl}" alt="${safeName}"></a>`;
+    }
+    if (/\.(mp3|wav|ogg|m4a|flac|aac)$/i.test(url)) {
+        return `<audio class="msg-audio" controls src="${safeUrl}"></audio>`;
+    }
+    return `<div class="msg-file">📎 <a href="${safeUrl}" target="_blank" download>${safeName}</a></div>`;
+}
+
+// ============================================================================
+// แนบไฟล์
+// ============================================================================
+function triggerFilePicker() { document.getElementById('fileInput').click(); }
+
+async function handleFileSelected(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+
+    showToast('⏳ กำลังอัปโหลดไฟล์...', 'admin');
+    try {
+        const res = await fetch('/api/upload', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (!data.success) { showToast(data.message || 'อัปโหลดไม่สำเร็จ', 'error'); return; }
+        dispatchMessage({ text: '', fileUrl: data.fileUrl, fileName: data.originalName });
+    } catch (err) {
+        showToast('อัปโหลดไฟล์ไม่สำเร็จ: เครือข่ายมีปัญหา', 'error');
+    }
+    e.target.value = '';
+}
+
+// ============================================================================
+// เพลงประจำห้อง (ซิงค์ผ่าน room-music-control / room-music-sync)
+// ============================================================================
+async function loadMusicListIntoSelect() {
+    const select = document.getElementById('musicSelect');
+    try {
+        const res = await fetch('/api/music-list');
+        const data = await res.json();
+        musicList = data.musicList || [];
+    } catch(e) { musicList = []; }
+
+    select.innerHTML = '<option value="">— เลือกเพลงจากคลัง —</option>' +
+        musicList.map(m => `<option value="${escapeHtml(m.url)}">${escapeHtml(m.originalName)}</option>`).join('');
+}
+
+function broadcastMusicLoad() {
+    if (activeContext.type !== 'room') return;
+    const url = document.getElementById('musicSelect').value;
+    if (!url) { showToast('กรุณาเลือกเพลงก่อน', 'warn'); return; }
+    const track = musicList.find(m => m.url === url);
+    socket.emit('room-music-control', {
+        roomId: activeContext.id, action: 'load', trackUrl: url, trackName: track ? track.originalName : url
+    });
+}
+
+function broadcastMusicPlay() {
+    if (activeContext.type !== 'room') return;
+    const audio = document.getElementById('roomAudio');
+    socket.emit('room-music-control', {
+        roomId: activeContext.id, action: 'play', trackUrl: currentRoomTrackUrl, currentTime: audio.currentTime || 0
+    });
+}
+
+function broadcastMusicPause() {
+    if (activeContext.type !== 'room') return;
+    const audio = document.getElementById('roomAudio');
+    socket.emit('room-music-control', {
+        roomId: activeContext.id, action: 'pause', currentTime: audio.currentTime || 0
+    });
+}
+
+function applyRemoteMusicSync(data) {
+    if (activeContext.type !== 'room' || activeContext.id !== data.roomId) return;
+    const audio = document.getElementById('roomAudio');
+    applyingRemoteAudioState = true;
+
+    if (data.action === 'load') {
+        currentRoomTrackUrl = data.trackUrl;
+        audio.src = data.trackUrl;
+        document.getElementById('nowPlayingText').textContent = `🎵 ${data.trackName || data.trackUrl}`;
+    } else if (data.action === 'play') {
+        if (typeof data.currentTime === 'number') audio.currentTime = data.currentTime;
+        audio.play().catch(() => {});
+    } else if (data.action === 'pause') {
+        if (typeof data.currentTime === 'number') audio.currentTime = data.currentTime;
+        audio.pause();
+    }
+    setTimeout(() => { applyingRemoteAudioState = false; }, 200);
+}
+
+// ============================================================================
+// รายงานปัญหา
+// ============================================================================
+function openReportModal() {
+    const label = activeContext.type === 'global' ? 'ห้องสนทนาสาธารณะ'
+        : activeContext.type === 'room' ? activeContext.name
+        : `DM กับ ${activeContext.nickname || activeContext.username}`;
+    document.getElementById('reportContextLabel').textContent = label;
+    document.getElementById('reportReason').value = '';
+    document.getElementById('reportMsg').textContent = '';
+    document.getElementById('reportModal').classList.add('open');
+}
+function closeReportModal() { document.getElementById('reportModal').classList.remove('open'); }
+
+async function submitReport() {
+    const reason = document.getElementById('reportReason').value.trim();
+    const msgEl = document.getElementById('reportMsg');
+    if (!reason) { msgEl.textContent = 'กรุณาระบุรายละเอียด'; msgEl.className = 'form-msg error'; return; }
+
+    const roomName = activeContext.type === 'global' ? 'สาธารณะ'
+        : activeContext.type === 'room' ? activeContext.name
+        : `DM: ${activeContext.username}`;
+
+    const { ok, data } = await apiPost('/api/report', { reporter: me.nickname || me.username, roomName, reason });
+    if (ok && data.success) {
+        msgEl.textContent = data.message; msgEl.className = 'form-msg success';
+        setTimeout(closeReportModal, 1200);
+    } else {
+        msgEl.textContent = 'ส่งรายงานไม่สำเร็จ'; msgEl.className = 'form-msg error';
+    }
+}
+
+// ============================================================================
+// แผงผู้ดูแลระบบ
+// หมายเหตุความปลอดภัย: endpoint /api/admin/* ฝั่งเซิร์ฟเวอร์ที่ให้มายังไม่มีการตรวจสอบ
+// สิทธิ์ผู้เรียก (ไม่มี session/token ผูกกับ role) หน้านี้จึงซ่อนปุ่มไว้ให้เฉพาะ role
+// admin เท่านั้น แต่ตัว API เองยังเรียกตรงได้จากใครก็ได้ที่รู้ URL — ควรเพิ่มการตรวจสอบ
+// สิทธิ์ฝั่งเซิร์ฟเวอร์ก่อนนำระบบขึ้นใช้งานจริง
+// ============================================================================
+function openAdminModal() {
+    document.getElementById('adminModal').classList.add('open');
+    switchAdminTab('users');
+    loadAdminData();
+}
+function closeAdminModal() { document.getElementById('adminModal').classList.remove('open'); }
+
+function switchAdminTab(tab) {
+    ['users','banned','rooms','reports','system'].forEach(t => {
+        document.getElementById(`adminTab${capitalize(t)}`).classList.toggle('active', t === tab);
+        document.getElementById(`adminPane${capitalize(t)}`).classList.toggle('active', t === tab);
+    });
+}
+function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+async function loadAdminData() {
+    try {
+        const res = await fetch('/api/admin/data');
+        const data = await res.json();
+        renderAdminUsers(data.users || []);
+        renderAdminBanned(data.bannedUsers || []);
+        renderAdminRooms(data.rooms || []);
+        renderAdminReports(data.reports || []);
+        document.getElementById('globalMuteToggle').checked = !!data.globalMute;
+    } catch(e) {
+        showToast('โหลดข้อมูลแอดมินไม่สำเร็จ', 'error');
+    }
+}
+
+function renderAdminUsers(users) {
+    const tbody = document.getElementById('adminUsersBody');
+    tbody.innerHTML = users.map(u => `
+        <tr>
+            <td>${escapeHtml(u.username)}${u.role === 'admin' ? ' 👑' : ''}</td>
+            <td>${escapeHtml(u.nickname || '-')}</td>
+            <td>${escapeHtml(u.office || '-')}</td>
+            <td><span class="status-tag ${u.status}">${u.status === 'approved' ? 'อนุมัติแล้ว' : 'รออนุมัติ'}</span></td>
+            <td class="row-actions">
+                ${u.status === 'pending' ? `<button class="btn-success" onclick="adminUserAction('${u.id}','approve')">อนุมัติ</button>
+                <button class="btn-ghost" onclick="adminUserAction('${u.id}','reject')">ปฏิเสธ</button>` : ''}
+                ${u.role !== 'admin' ? `<button class="btn-danger" onclick="adminUserAction('${u.id}','ban')">แบน</button>
+                <button class="btn-ghost" onclick="adminUserAction('${u.id}','kick')">เตะออก</button>` : ''}
+            </td>
+        </tr>
+    `).join('') || `<tr><td colspan="5" class="empty-hint">ไม่มีข้อมูล</td></tr>`;
+}
+
+async function adminUserAction(userId, action) {
+    let reason = '';
+    if (action === 'ban' || action === 'kick') {
+        reason = prompt('ระบุเหตุผล:') || '';
+        if (reason === null) return;
+    }
+    if (action === 'reject' && !confirm('ยืนยันปฏิเสธคำขอสมัครสมาชิกนี้?')) return;
+    await apiPost('/api/admin/action', { userId, action, reason });
+    loadAdminData();
+}
+
+function renderAdminBanned(list) {
+    const tbody = document.getElementById('adminBannedBody');
+    tbody.innerHTML = list.map(b => `
+        <tr><td>${escapeHtml(b.username)}</td><td>${escapeHtml(b.reason)}</td><td>${escapeHtml(b.time)}</td></tr>
+    `).join('') || `<tr><td colspan="3" class="empty-hint">ไม่มีข้อมูล</td></tr>`;
+}
+
+function renderAdminRooms(list) {
+    const tbody = document.getElementById('adminRoomsBody');
+    tbody.innerHTML = list.map(r => `
+        <tr>
+            <td><input type="checkbox" class="room-check" value="${r.id}"></td>
+            <td>${escapeHtml(r.name)}</td>
+            <td>${escapeHtml(r.createdBy || '-')}</td>
+            <td class="row-actions">
+                <button class="btn-ghost" onclick="adminRenameRoom('${r.id}','${escapeAttr(r.name)}')">เปลี่ยนชื่อ</button>
+                <button class="btn-danger" onclick="adminDeleteRoom('${r.id}')">ลบ</button>
+            </td>
+        </tr>
+    `).join('') || `<tr><td colspan="4" class="empty-hint">ยังไม่มีห้องสนทนา</td></tr>`;
+}
+
+function toggleAllRoomChecks(box) {
+    document.querySelectorAll('.room-check').forEach(cb => cb.checked = box.checked);
+}
+
+async function adminRenameRoom(roomId, oldName) {
+    const newName = prompt('ตั้งชื่อห้องใหม่:', oldName);
+    if (!newName) return;
+    await apiPost('/api/admin/room-action', { action: 'rename', roomId, newName });
+    loadAdminData();
+}
+
+async function adminDeleteRoom(roomId) {
+    if (!confirm('ยืนยันลบห้องนี้?')) return;
+    await apiPost('/api/admin/room-action', { action: 'delete', roomId });
+    loadAdminData();
+}
+
+async function bulkDeleteRooms() {
+    const ids = Array.from(document.querySelectorAll('.room-check:checked')).map(cb => cb.value);
+    if (!ids.length) { showToast('กรุณาเลือกห้องที่ต้องการลบ', 'warn'); return; }
+    if (!confirm(`ยืนยันลบ ${ids.length} ห้องที่เลือก?`)) return;
+    await apiPost('/api/admin/room-action', { action: 'bulk-delete', roomIds: ids });
+    loadAdminData();
+}
+
+function renderAdminReports(list) {
+    const tbody = document.getElementById('adminReportsBody');
+    tbody.innerHTML = [...list].reverse().map(r => `
+        <tr><td>${escapeHtml(r.reporter)}</td><td>${escapeHtml(r.roomName)}</td><td>${escapeHtml(r.reason)}</td><td>${escapeHtml(r.time)}</td></tr>
+    `).join('') || `<tr><td colspan="4" class="empty-hint">ยังไม่มีรายงาน</td></tr>`;
+}
+
+async function toggleGlobalMute(checked) {
+    await apiPost('/api/admin/toggle-mute', { mute: checked });
+}
+
+async function sendBroadcast() {
+    const message = document.getElementById('broadcastMsg').value.trim();
+    if (!message) return;
+    await apiPost('/api/admin/broadcast', { message });
+    document.getElementById('broadcastMsg').value = '';
+    showToast('ส่งประกาศแล้ว', 'admin');
+}
+
+function closePopupModal() { document.getElementById('popupModal').classList.remove('open'); }
+
+// ============================================================================
+// มือถือ: เปิด/ปิดแถบข้าง
+// ============================================================================
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); }
+function closeSidebarMobile() { if (window.innerWidth <= 900) document.getElementById('sidebar').classList.remove('show'); }
+function toggleContextPanel() { document.getElementById('contextPanel').classList.toggle('show'); }
+
+document.getElementById('mobilePanelToggleWatcher');
+function syncMobilePanelToggleVisibility() {
+    document.getElementById('mobilePanelToggle').style.display =
+        (window.innerWidth <= 900 && activeContext.type === 'room') ? 'flex' : 'none';
+}
+window.addEventListener('resize', syncMobilePanelToggleVisibility);
+const _origUpdateSubject = updateTopbarSubject;
+updateTopbarSubject = function() { _origUpdateSubject(); syncMobilePanelToggleVisibility(); };
+
+// ============================================================================
+// ยูทิลิตี้
+// ============================================================================
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+function escapeAttr(str) { return escapeHtml(str).replace(/"/g, '&quot;'); }
+function nowTimeLabel() { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
+
+function showToast(text, kind) {
+    const stack = document.getElementById('toastStack');
+    const el = document.createElement('div');
+    el.className = `toast ${kind || ''}`;
+    el.textContent = text;
+    stack.appendChild(el);
+    setTimeout(() => el.remove(), 5000);
+}
+
+document.getElementById('msgInput').addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 110) + 'px';
+});
+
+// ============================================================================
+// เริ่มต้น: ถ้ามีเซสชันเดิมใน localStorage ให้เข้าแอปทันที
+// ============================================================================
+(function init() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+        try {
+            me = JSON.parse(saved);
+            enterApp();
+            return;
+        } catch(e) { localStorage.removeItem(STORAGE_KEY); }
+    }
+    document.getElementById('authScreen').style.display = 'flex';
+})();
+</script>
+</body>
+</html>
