@@ -128,22 +128,38 @@
       "province": "Nakornpathom",
       "nickname": "a",
       "details": "-"
+    },
+    {
+      "id": "user_1789823095017",
+      "username": "mbk",
+      "password": "$2b$10$zB/sxJMKMzNCWbypcC1wc.Y6ceI3s5Ibdn50WYknWGke/CaOlQfrK",
+      "status": "approved",
+      "role": "member",
+      "facebookUrl": "",
+      "birthdate": "2026-09-19",
+      "office": "",
+      "province": "",
+      "nickname": "mo",
+      "details": "-"
+    },
+    {
+      "id": "user_1789823650553",
+      "username": "James",
+      "password": "$2b$10$quMv.GUvWLA0Q3zkBxepteNCZOF8IT9xlZnUnHZcg.8RBjonSeuDC",
+      "status": "approved",
+      "role": "member",
+      "facebookUrl": "",
+      "birthdate": "2026-09-19",
+      "office": "",
+      "province": "",
+      "nickname": "James",
+      "details": "-"
     }
   ],
   "rooms": [
     {
-      "id": "room_1788607672024",
-      "name": "ห้องส่งงาน",
-      "createdBy": "job"
-    },
-    {
-      "id": "room_1788714195001",
-      "name": "ห้อง1",
-      "createdBy": "admin"
-    },
-    {
-      "id": "room_1788714199534",
-      "name": "ห้อง2",
+      "id": "room_1789867875632",
+      "name": "music",
       "createdBy": "admin"
     }
   ],
@@ -170,5 +186,65 @@
       "reason": "123",
       "time": "9/6/2026, 11:47:32 PM"
     }
-  ]
+  ],
+  "pendingRooms": [],
+  "mails": [
+    {
+      "id": "mail_1789823235640_378171",
+      "from": "mbk",
+      "to": "เจมส์",
+      "subject": "Hi",
+      "body": "Hi",
+      "attachments": [],
+      "time": "9/19/2026, 8:07:15 PM",
+      "read": true,
+      "senderDeleted": false,
+      "recipientDeleted": false
+    },
+    {
+      "id": "mail_1789823484142_203436",
+      "from": "เจมส์",
+      "to": "mbk",
+      "subject": "ภาพ",
+      "body": "ภาพ",
+      "attachments": [
+        {
+          "filename": "1789823482535-891764468-IMG_8022.png",
+          "originalName": "IMG_8022.png",
+          "size": 1860321,
+          "url": "/mail-attachments/1789823482535-891764468-IMG_8022.png"
+        }
+      ],
+      "time": "9/19/2026, 8:11:24 PM",
+      "read": true,
+      "senderDeleted": false,
+      "recipientDeleted": false
+    },
+    {
+      "id": "mail_1789824544041_394499",
+      "from": "admin",
+      "to": "กนิษฐา",
+      "subject": "ทดสอบ",
+      "body": "ทดสอบ",
+      "attachments": [],
+      "time": "9/19/2026, 8:29:04 PM",
+      "read": true,
+      "senderDeleted": false,
+      "recipientDeleted": true
+    },
+    {
+      "id": "mail_1789912001474_963691",
+      "from": "admin",
+      "to": "กนิษฐา",
+      "subject": "ทดสอบการส่งเมล์",
+      "body": "ทดสอบ",
+      "attachments": [],
+      "time": "9/20/2026, 8:46:41 PM",
+      "read": false,
+      "senderDeleted": false,
+      "recipientDeleted": true
+    }
+  ],
+  "voiceRooms": [],
+  "pendingVoiceRooms": []
 }
